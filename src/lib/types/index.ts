@@ -1,0 +1,1 @@
+// # Interfaces (IFuncionario, IVacina, IAgendamento)

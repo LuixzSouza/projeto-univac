@@ -1,26 +1,186 @@
+/* # Configuração do Tailwind CSS */
+@import 'react-big-calendar/lib/css/react-big-calendar.css';
 @import "tailwindcss";
+@import 'react-grid-layout/css/styles.css';
+@import 'react-resizable/css/styles.css';
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg-base: #ffffff;          /* fundo geral */
+  --bg-surface: #f9fafb;       /* painéis, sidebar, cards */
+  --text-base: #1f2937;        /* texto principal (gray-800) */
+  --text-muted: #6b7280;       /* texto secundário (gray-500) */
+  --border-color: #e5e7eb;     /* bordas suaves (gray-200) */
+
+  /* Cores de destaque */
+  --primary: #16a34a;          /* verde principal */
+  --primary-light: #22c55e;    /* hover/detalhes */
+  --primary-dark: #15803d;     /* versão escura */
+
+  /* Herdadas automaticamente */
+  --bg-active: var(--primary);
+  --text-active: #ffffff;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  /* ===============================================
+     🎨 CORES BASE DO SISTEMA
+  =============================================== */
+  --color-bg-base: var(--bg-base);                /* fundo geral */
+  --color-bg-surface: var(--bg-surface);          /* painéis/cards/sidebar */
+  --color-text-base: var(--text-base);            /* texto principal */
+  --color-text-muted: var(--text-muted);          /* texto secundário */
+  --color-border: var(--border-color);            /* cor de borda geral */
+
+  /* ===============================================
+     💚 VERDE UNIVAS — PALETA DE DESTAQUE
+  =============================================== */
+  --color-primary-light: #22c55e; /* hover/detalhes */
+  --color-primary: #16a34a;       /* cor principal */
+  --color-primary-dark: #15803d;  /* versão escura */
+
+  /* ===============================================
+     🔤 FONTES
+  =============================================== */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+
+/* 🌚 MODO ESCURO */
+.dark {
+  --bg-base: #0a0a0a;
+  --bg-surface: #111827;
+  --text-base: #e5e7eb;
+  --text-muted: #9ca3af;
+  --border-color: #1f2937;
+
+  --primary: #16a34a;
+  --primary-light: #22c55e;
+  --primary-dark: #15803d;
+
+  --bg-active: var(--primary-dark);
+  --text-active: #ffffff;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* ==============================================
+   ✅ Estilos Customizados para React Big Calendar
+============================================== */
+
+/* -- Container Geral -- */
+.rbc-calendar {
+  @apply border-none rounded-lg; /* Remove borda padrão, usa a do nosso container */
+}
+
+/* -- Toolbar (Navegação Superior) -- */
+.rbc-toolbar {
+  @apply mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2;
+}
+.rbc-toolbar .rbc-toolbar-label {
+  @apply text-xl font-semibold text-gray-800 dark:text-gray-100 text-center sm:text-left flex-grow; /* Título (Mês/Ano) */
+}
+.rbc-btn-group {
+  @apply flex items-center justify-center gap-1;
+}
+/* Estilo dos Botões da Toolbar (Hoje, Anterior, Próximo, Vistas) */
+.rbc-toolbar button {
+  @apply px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-150 ease-in-out border border-gray-300 dark:border-gray-600;
+  @apply bg-white text-gray-700 hover:bg-gray-100 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600;
+}
+/* Botão Ativo (Vista atual) */
+.rbc-toolbar button.rbc-active {
+  @apply bg-primary text-white border-primary hover:bg-primary-dark dark:bg-primary dark:hover:bg-primary-dark;
+}
+/* Botão Hoje (Destaque diferente) */
+.rbc-toolbar button:first-child { /* Assuming 'Hoje' is the first */
+  /* @apply bg-primary/10 text-primary border-primary/30 hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-light; */
+}
+
+
+/* -- Cabeçalho dos Dias (Dom, Seg, Ter...) -- */
+.rbc-header {
+  @apply px-2 py-2 text-center text-xs font-medium uppercase text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700;
+}
+
+/* -- Células de Data -- */
+.rbc-date-cell {
+  @apply text-right p-1; /* Alinha número à direita, padding pequeno */
+}
+/* Número da data */
+.rbc-date-cell .rbc-button-link {
+  @apply text-xs font-medium text-gray-700 dark:text-gray-300 px-1.5 py-0.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700;
+}
+
+/* -- Dia Atual -- */
+.rbc-current-time-indicator {
+ @apply bg-red-500; /* Linha de hora atual (se visível) */
+}
+.rbc-day-bg.rbc-today {
+  @apply bg-primary/5 dark:bg-primary/10; /* Fundo MUITO subtil para o dia atual */
+}
+.rbc-date-cell.rbc-now .rbc-button-link,
+.rbc-date-cell.rbc-today .rbc-button-link { /* Número do dia atual */
+  @apply bg-primary text-white font-bold hover:bg-primary-dark;
+}
+
+/* -- Dias fora do mês atual -- */
+.rbc-off-range-bg {
+  @apply bg-gray-50 dark:bg-gray-800/50; /* Fundo ligeiramente diferente */
+}
+.rbc-off-range .rbc-button-link {
+  @apply text-gray-400 dark:text-gray-500; /* Números mais apagados */
+}
+
+/* -- Eventos -- */
+.rbc-event {
+  @apply p-1 text-xs rounded-md border-none leading-tight shadow-sm; /* Ajusta padding, remove borda, ajusta linha */
+  /* Cores vêm do eventPropGetter */
+}
+.rbc-event-label {
+  /* Pode esconder a hora padrão se quiser */
+   @apply hidden;
+}
+.rbc-event-content {
+  /* Conteúdo do evento (vem do nosso EventoEstilizado) */
+}
+
+/* -- Vista "Agenda" -- */
+.rbc-agenda-view table {
+  @apply border-separate border-spacing-y-2; /* Adiciona espaço entre linhas */
+}
+.rbc-agenda-view .rbc-agenda-date-cell,
+.rbc-agenda-view .rbc-agenda-time-cell {
+  @apply text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap px-4 py-2 border-b-0; /* Estilo da data/hora */
+}
+.rbc-agenda-view .rbc-agenda-content-cell {
+   @apply px-4 py-2 border-b-0; /* Estilo do conteúdo do evento */
+}
+.rbc-agenda-table tbody tr:hover {
+    @apply bg-gray-50 dark:bg-gray-700/50 rounded-md; /* Hover na linha da agenda */
+}
+
+
+/* -- Linhas da Grelha (Opcional: tornar mais subtis) -- */
+.rbc-month-row, .rbc-day-slot .rbc-time-slot, .rbc-time-header-content .rbc-row > * {
+  @apply border-gray-200 dark:border-gray-700;
+}
+.rbc-time-slot {
+   /* border-top: none !important; */ /* Remove linhas horizontais na vista Week/Day se desejar */
+}
+
+/* -- Scrollbars (Opcional: estilizar para Webkit) -- */
+.rbc-time-content::-webkit-scrollbar {
+  width: 6px;
+}
+.rbc-time-content::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1; /* Cor do scrollbar */
+  border-radius: 3px;
+}
+.rbc-time-content::-webkit-scrollbar-track {
+  background: transparent;
 }
