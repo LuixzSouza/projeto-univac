@@ -1,16 +1,17 @@
 'use client'
 
-import { useState, useEffect } from 'react' 
+import { useState, useEffect } from 'react'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
 import { Button } from '@/components/ui/Button'
-import { IFuncionario } from '@/lib/mock-data' 
+import { IFuncionario } from '@/lib/mock-data'
 
 interface FuncionarioFormProps {
   onClose: () => void
   funcionarioParaEditar: IFuncionario | null
 }
 
+// Estado inicial do formulário
 const estadoInicial = {
   nome: '',
   email: '',
@@ -26,17 +27,17 @@ export function FuncionarioForm({
   funcionarioParaEditar,
 }: FuncionarioFormProps) {
   const [formData, setFormData] = useState(estadoInicial)
-
   const modoEdicao = !!funcionarioParaEditar
 
+  // Quando abre o form, se for edição, preenche com os dados do funcionário
   useEffect(() => {
-    if (modoEdicao && funcionarioParaEditar) { 
+    if (modoEdicao && funcionarioParaEditar) {
       setFormData({
         nome: funcionarioParaEditar.nome,
         email: funcionarioParaEditar.email,
         numeroRegistro: String(funcionarioParaEditar.numeroRegistro),
         cpf: funcionarioParaEditar.cpf,
-        senha: '', 
+        senha: '',
         role: funcionarioParaEditar.role,
         status: funcionarioParaEditar.status,
       })
@@ -45,9 +46,8 @@ export function FuncionarioForm({
     }
   }, [funcionarioParaEditar, modoEdicao])
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-  ) => {
+  // Atualiza o estado conforme o usuário digita
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { id, value } = e.target
     if (id === 'status') {
       setFormData((prev) => ({ ...prev, status: value === 'true' }))
@@ -56,20 +56,38 @@ export function FuncionarioForm({
     }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Submete para API
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (modoEdicao && funcionarioParaEditar) { 
-      console.log('--- DADOS ATUALIZADOS (MOCK) ---')
-      console.log({ id: funcionarioParaEditar.id, ...formData })
-      alert('Funcionário atualizado com sucesso! (Ver console)')
-    } else {
-      console.log('--- NOVO FUNCIONÁRIO (MOCK) ---')
-      console.log(formData)
-      alert('Funcionário adicionado com sucesso! (Ver console)')
-    }
+    try {
+      const url =
+        modoEdicao && funcionarioParaEditar
+          ? `/api/funcionarios/${funcionarioParaEditar.id}`
+          : '/api/funcionarios'
 
-    onClose() 
+      const method = modoEdicao ? 'PUT' : 'POST'
+
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      })
+
+      if (!response.ok) {
+        const { error } = await response.json()
+        alert(`Erro: ${error || 'Falha ao salvar funcionário'}`)
+        return
+      }
+
+      const data = await response.json()
+      alert(modoEdicao ? 'Funcionário atualizado com sucesso!' : 'Funcionário cadastrado com sucesso!')
+      console.log(data)
+      onClose()
+    } catch (error) {
+      console.error(error)
+      alert('Erro inesperado ao salvar funcionário.')
+    }
   }
 
   return (
