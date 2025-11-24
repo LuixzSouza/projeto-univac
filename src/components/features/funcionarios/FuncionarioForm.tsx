@@ -83,6 +83,10 @@ export function FuncionarioForm({
       const data = await response.json()
       alert(modoEdicao ? 'Funcionário atualizado com sucesso!' : 'Funcionário cadastrado com sucesso!')
       console.log(data)
+
+      // 🔥 Atualiza a lista em tempo real (sem alterar nada no seu front)
+      window.dispatchEvent(new Event("atualizar-funcionarios"))
+
       onClose()
     } catch (error) {
       console.error(error)

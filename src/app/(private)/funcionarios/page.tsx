@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { mockFuncionarios, IFuncionario } from '@/lib/mock-data'
+import { IFuncionario } from '@/lib/mock-data'
 import { FuncionarioTable } from '@/components/features/funcionarios/FuncionarioTable'
 import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
@@ -22,13 +22,31 @@ export default function FuncionariosPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [funcionarios, setFuncionarios] = useState<IFuncionario[]>([])
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setFuncionarios(mockFuncionarios)
+  // =====================================================
+  // 🚀 CARREGA DO BANCO DE DADOS (SEM MOCK)
+  // =====================================================
+  async function carregarFuncionarios() {
+    try {
+      const res = await fetch('/api/funcionarios', { cache: 'no-store' })
+      const dados = await res.json()
+      setFuncionarios(dados)
       setIsLoading(false)
-    }, 300)
-    return () => clearTimeout(timer)
+    } catch (e) {
+      console.error("Erro ao carregar funcionários:", e)
+    }
+  }
+
+  useEffect(() => {
+    carregarFuncionarios()
   }, [])
+
+  // =====================================================
+  // 🚀 RECEBE NOVOS FUNCIONÁRIOS AO SALVAR SEM RELOAD
+  // =====================================================
+  const handleAfterSave = async () => {
+    await carregarFuncionarios()
+    handleCloseFormModal()
+  }
 
   const funcionariosFiltrados = useMemo(() => {
     if (!filtroFuncionarios) return funcionarios
@@ -52,23 +70,49 @@ export default function FuncionariosPage() {
     setCurrentPage(1)
   }
 
-  const handleOpenAddModal = () => { setFuncionarioEmEdicao(null); setIsFormModalOpen(true); }
-  const handleOpenEditModal = (funcionario: IFuncionario) => { setFuncionarioEmEdicao(funcionario); setIsFormModalOpen(true); }
-  const handleCloseFormModal = () => { setIsFormModalOpen(false); setTimeout(() => setFuncionarioEmEdicao(null), 300); }
-  const handleOpenDeleteModal = (funcionario: IFuncionario) => { setFuncionarioParaExcluir(funcionario); setIsDeleteModalOpen(true); }
-  const handleCloseDeleteModal = () => { setIsDeleteModalOpen(false); setTimeout(() => setFuncionarioParaExcluir(null), 300); }
+  const handleOpenAddModal = () => { 
+    setFuncionarioEmEdicao(null) 
+    setIsFormModalOpen(true) 
+  }
 
-  const handleConfirmDelete = () => {
+  const handleOpenEditModal = (funcionario: IFuncionario) => { 
+    setFuncionarioEmEdicao(funcionario) 
+    setIsFormModalOpen(true) 
+  }
+
+  const handleCloseFormModal = () => { 
+    setIsFormModalOpen(false) 
+    setTimeout(() => setFuncionarioEmEdicao(null), 300) 
+  }
+
+  const handleOpenDeleteModal = (funcionario: IFuncionario) => { 
+    setFuncionarioParaExcluir(funcionario) 
+    setIsDeleteModalOpen(true) 
+  }
+
+  const handleCloseDeleteModal = () => { 
+    setIsDeleteModalOpen(false) 
+    setTimeout(() => setFuncionarioParaExcluir(null), 300) 
+  }
+
+  // =====================================================
+  // 🚀 EXCLUI DINAMICAMENTE SEM RECARREGAR
+  // =====================================================
+  const handleConfirmDelete = async () => {
     if (!funcionarioParaExcluir) return
-    const novosFuncionarios = funcionarios.filter(f => f.id !== funcionarioParaExcluir.id)
-    setFuncionarios(novosFuncionarios)
 
-    const novoTotalFiltrado = funcionariosFiltrados.filter(f => f.id !== funcionarioParaExcluir.id).length
-    const novoTotalPaginas = Math.ceil(novoTotalFiltrado / itemsPerPage)
-    if (currentPage > novoTotalPaginas && novoTotalPaginas > 0) setCurrentPage(novoTotalPaginas)
-    else if (funcionariosPaginados.length === 1 && currentPage > 1) setCurrentPage(currentPage - 1)
+    try {
+      await fetch(`/api/funcionarios/${funcionarioParaExcluir.id}`, {
+        method: 'DELETE'
+      })
 
-    alert(`Funcionário "${funcionarioParaExcluir.nome}" excluído com sucesso!`)
+      await carregarFuncionarios()
+
+      alert(`Funcionário "${funcionarioParaExcluir.nome}" excluído com sucesso!`)
+    } catch (erro) {
+      console.error("Erro ao excluir:", erro)
+    }
+
     handleCloseDeleteModal()
   }
 
@@ -144,7 +188,10 @@ export default function FuncionariosPage() {
             onClose={handleCloseFormModal}
             title={funcionarioEmEdicao ? 'Editar Funcionário' : 'Novo Funcionário'}
           >
-            <FuncionarioForm onClose={handleCloseFormModal} funcionarioParaEditar={funcionarioEmEdicao}/>
+            <FuncionarioForm 
+              onClose={handleAfterSave}
+              funcionarioParaEditar={funcionarioEmEdicao}
+            />
           </Modal>
         )}
       </AnimatePresence>

@@ -8,7 +8,6 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { nome, numeroRegistro, cpf, email, senha, role, status } = body;
 
-    // Validação
     if (!nome || !numeroRegistro || !cpf || !email || !senha) {
       return NextResponse.json(
         { error: "Campos obrigatórios faltando" },
@@ -16,17 +15,15 @@ export async function POST(request: Request) {
       );
     }
 
-    // Criptografa a senha
     const senhaHash = await bcrypt.hash(senha, 10);
 
-    // Cria o funcionário
     const novoFuncionario = await prisma.funcionarioUsuario.create({
       data: {
         nome,
-        numeroRegistro: Number(numeroRegistro), // <- Corrigido
+        numeroRegistro: Number(numeroRegistro),
         cpf,
         email,
-        senha: senhaHash,                       // <- Corrigido
+        senha: senhaHash,
         role,
         status,
       },
@@ -38,6 +35,25 @@ export async function POST(request: Request) {
     console.error("Erro no POST /api/funcionarios:", error);
     return NextResponse.json(
       { error: error.message || "Erro ao criar funcionário" },
+      { status: 500 }
+    );
+  }
+}
+
+// =========================
+// AQUI ESTÁ O GET ⬇⬇⬇
+// =========================
+export async function GET() {
+  try {
+    const funcionarios = await prisma.funcionarioUsuario.findMany({
+      orderBy: { id: "desc" }
+    });
+
+    return NextResponse.json(funcionarios);
+  } catch (error: any) {
+    console.error("Erro no GET /api/funcionarios:", error);
+    return NextResponse.json(
+      { error: error.message || "Erro ao buscar funcionários" },
       { status: 500 }
     );
   }
