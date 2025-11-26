@@ -35,6 +35,18 @@ model TipoVacina {
   // Relações
   aplicacoes      AplicacoesVacina[]
   agendamentos    Agendamento[]
+  lotes          Lote[]
+}
+
+model Lote {
+  id          Int        @id @default(autoincrement())
+  codigo      String     // Ex: "FA-2025"
+  quantidade  Int        // Ex: 100
+  validade    DateTime
+  criadoEm    DateTime   @default(now())
+  
+  vacinaId    Int
+  vacina      TipoVacina @relation(fields: [vacinaId], references: [id], onDelete: Cascade)
 }
 
 model AplicacoesVacina {
@@ -61,4 +73,13 @@ model Agendamento {
 
   vacina          TipoVacina @relation(fields: [vacinaId], references: [id])
   vacinaId        Int
+}
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  acao      String   // Ex: "EXCLUSAO", "CADASTRO", "LOGIN"
+  recurso   String   // Ex: "Funcionário", "Vacina"
+  detalhe   String   // Ex: "Removeu o funcionário João Silva"
+  autor     String   // Email ou Nome de quem fez
+  data      DateTime @default(now())
 }

@@ -1,79 +1,53 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
-// GET - Listar todos os agendamentos
+// LISTAR AGENDAMENTOS
 export async function GET() {
   try {
     const agendamentos = await prisma.agendamento.findMany({
       include: {
-        funcionario: true,
-        vacina: true,
+        funcionario: { select: { nome: true } }, // Traz o nome do funcionário
+        vacina: { select: { nome: true } }       // Traz o nome da vacina
       },
-      orderBy: { start: "asc" },
+      orderBy: { dataAgendamento: 'asc' }
     });
 
-    return NextResponse.json(agendamentos, { status: 200 });
-
-  } catch (error: any) {
-    console.error("Erro no GET /api/agendamentos:", error);
-    return NextResponse.json(
-      { error: "Erro ao listar agendamentos" },
-      { status: 500 }
-    );
+    return NextResponse.json(agendamentos);
+  } catch (error) {
+    console.error("Erro ao buscar agendamentos:", error);
+    return NextResponse.json({ error: "Erro ao buscar agendamentos" }, { status: 500 });
   }
 }
 
-// POST - Criar agendamento
+// CRIAR AGENDAMENTO
 export async function POST(request: Request) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+
     const body = await request.json();
-    const { funcionarioId, vacinaId, start, end } = body;
+    const { dataAgendamento, funcionarioId, vacinaId, status } = body;
 
-    // Validação básica
-    if (!funcionarioId || !vacinaId || !start || !end) {
-      return NextResponse.json(
-        { error: "Campos obrigatórios faltando" },
-        { status: 400 }
-      );
+    if (!dataAgendamento || !funcionarioId || !vacinaId) {
+      return NextResponse.json({ error: "Dados incompletos" }, { status: 400 });
     }
 
-    // Verifica sobreposição de horário
-    const conflito = await prisma.agendamento.findFirst({
-      where: {
-        funcionarioId: Number(funcionarioId),
-        OR: [
-          {
-            start: { lte: new Date(end) },
-            end: { gte: new Date(start) },
-          },
-        ],
-      },
-    });
-
-    if (conflito) {
-      return NextResponse.json(
-        { error: "O funcionário já possui um agendamento nesse intervalo" },
-        { status: 409 }
-      );
-    }
-
+    // Cria o agendamento
     const novoAgendamento = await prisma.agendamento.create({
       data: {
+        dataAgendamento: new Date(dataAgendamento), // Garante que é data válida
         funcionarioId: Number(funcionarioId),
         vacinaId: Number(vacinaId),
-        start: new Date(start),
-        end: new Date(end),
-        status: "Agendado",
-      },
+        status: status || "Agendado"
+      }
     });
 
     return NextResponse.json(novoAgendamento, { status: 201 });
 
-  } catch (error: any) {
-    console.error("Erro no POST /api/agendamentos:", error);
-    return NextResponse.json(
-      { error: error.message || "Erro ao criar agendamento" },
-      { status: 500 }
-    );
+  } catch (error) {
+    console.error("Erro ao criar agendamento:", error);
+    return NextResponse.json({ error: "Erro ao criar agendamento" }, { status: 500 });
   }
 }

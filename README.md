@@ -1,135 +1,135 @@
-# 🚀 Sistema UniVac - Gerenciamento de Vacinação
+# 💉 UniVac - Sistema de Gestão de Vacinação Corporativa
 
-Sistema web completo para gerenciar a vacinação de funcionários, desenvolvido com Next.js, TypeScript, Tailwind CSS, Prisma e PostgreSQL (Neon DB). Permite o cadastro e controle de funcionários, tipos de vacinas, registro de aplicações, visualização de agenda e um painel de controlo com estatísticas relevantes.
+![Next.js](https://img.shields.io/badge/Next.js-14-black?style=for-the-badge&logo=next.js)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?style=for-the-badge&logo=tailwind-css)
+![Prisma](https://img.shields.io/badge/Prisma-5.0-2D3748?style=for-the-badge&logo=prisma)
+![PostgreSQL](https://img.shields.io/badge/Neon_DB-Serverless-00E599?style=for-the-badge&logo=postgresql)
 
-## ✨ Funcionalidades Principais
-
-* **Autenticação de Usuários:** Login seguro com email e senha (NextAuth.js).
-* **Gerenciamento de Funcionários:** CRUD completo para funcionários (com paginação e filtro).
-* **Gerenciamento de Tipos de Vacina:** CRUD completo para os tipos de vacina (com paginação e filtro).
-* **Registro de Aplicação:** Formulário para registrar a aplicação de uma vacina num funcionário.
-* **Agenda Visual:** Calendário interativo (`react-big-calendar`) para visualizar e criar/editar agendamentos.
-* **Histórico de Aplicações:** Tabela paginada e filtrável com os registos de vacinas aplicadas.
-* **Dashboard:** Painel de controlo com visão geral:
-    * Gráfico de Status das Vacinas (Obrigatória vs. Opcional).
-    * Gráfico de Funcionários por Status de Vacinação (Completo, Parcial, Nenhum).
-    * Tabela de Funcionários com Vacinas Obrigatórias Pendentes.
-    * Visualização dos Próximos Agendamentos e Mini Calendário.
-    * Ações Rápidas.
-    * Feed de Atividade Recente.
-* **Gestão de Perfil:** Edição de nome e senha do utilizador logado.
-* **Interface Moderna:** Design responsivo com Tailwind CSS v4, animações suaves (`framer-motion`) e modo Claro/Escuro (`next-themes`).
-
-## 🛠️ Tecnologias Utilizadas
-
-* **Framework:** Next.js 14 (App Router)
-* **Linguagem:** TypeScript
-* **Estilização:** Tailwind CSS 4
-* **Banco de Dados:** PostgreSQL (Serverless via [Neon DB](https://neon.tech/))
-* **ORM:** Prisma
-* **Autenticação:** NextAuth.js v5 (Beta)
-* **UI & Visualização:**
-    * React Big Calendar (Agenda)
-    * Chart.js & react-chartjs-2 (Gráficos)
-    * Framer Motion (Animações)
-    * Lucide Icons (Ícones)
-    * Headless UI (Switch)
-* **Gerenciador de Pacotes:** npm (ou Yarn)
-* **Ambiente:** Node.js
-
-## ⚙️ Configuração do Ambiente Local
-
-Siga estes passos para configurar e rodar o projeto na sua máquina.
-
-### Pré-requisitos
-
-* **Node.js:** Versão 18.x ou superior. (Verifique com `node -v`)
-* **npm** (ou Yarn): Geralmente vem com o Node.js. (Verifique com `npm -v`)
-* **Git:** Para clonar o repositório.
-* **Conta Neon DB:** Crie uma conta gratuita em [Neon](https://neon.tech/) para hospedar o banco de dados PostgreSQL.
-
-### Passos de Instalação
-
-1.  **Clone o Repositório:**
-    ```bash
-    git clone [URL_DO_SEU_REPOSITORIO_GIT]
-    cd projeto-univac
-    ```
-
-2.  **Instale as Dependências:**
-    ```bash
-    npm install
-    # ou
-    # yarn install
-    ```
-
-3.  **Configure as Variáveis de Ambiente:**
-    * Crie um ficheiro chamado `.env` na raiz do projeto (no mesmo nível que `package.json`).
-    * Copie o conteúdo abaixo para o ficheiro `.env` e **substitua os valores**:
-
-        ```dotenv
-        # /projeto-univac/.env
-
-        # 1. Cole a sua URL de Conexão (Connection String) do Neon DB aqui
-        #    Formato: postgresql://<user>:<password>@<host>.cloud.neon.tech/<database>?sslmode=require
-        DATABASE_URL="SUA_CONNECTION_STRING_DO_NEON_DB"
-
-        # 2. Chave secreta para o NextAuth (pode gerar uma com `openssl rand -base64 32` no terminal)
-        NEXTAUTH_SECRET="UMA_CHAVE_SECRETA_MUITO_FORTE_E_ALEATORIA"
-
-        # 3. URL base da sua aplicação em desenvolvimento
-        NEXTAUTH_URL="http://localhost:3000"
-        ```
-
-### Configuração do Banco de Dados (Prisma + Neon)
-
-O Prisma é a ferramenta que liga o nosso código ao banco de dados Neon.
-
-1.  **Verifique a Conexão:** Garanta que a `DATABASE_URL` no seu ficheiro `.env` está correta (copiada do seu projeto Neon).
-
-2.  **Aplique as Migrações:** Este comando vai ler o ficheiro `prisma/schema.prisma` e criar/atualizar as tabelas no seu banco de dados Neon.
-    ```bash
-    npx prisma migrate dev
-    ```
-    * *Nota:* Se for a primeira vez, ele pode pedir um nome para a migração (ex: "initial-setup").
-
-3.  **Gere o Cliente Prisma:** Garante que o código do Prisma está atualizado.
-    ```bash
-    npx prisma generate
-    ```
-
-4.  **(Opcional, mas Recomendado) Popule o Banco com Dados Iniciais:** Este comando executa o script `prisma/seed.js` para criar o utilizador **Admin** inicial.
-    ```bash
-    npm run seed
-    ```
-    * **Credenciais do Admin:**
-        * Email: `admin@vacina.com`
-        * Senha: `admin123`
-
-## ▶️ Rodando a Aplicação
-
-1.  **Inicie o Servidor de Desenvolvimento:**
-    ```bash
-    npm run dev
-    # ou
-    # yarn dev
-    ```
-
-2.  **Acesse a Aplicação:** Abra o seu navegador e vá para [http://localhost:3000](http://localhost:3000).
-
-3.  **Faça Login:** Use as credenciais do utilizador Admin criadas pelo `seed` (ou outras que você criar).
-
-## 📜 Scripts Disponíveis
-
-* `npm run dev`: Inicia o servidor em modo de desenvolvimento.
-* `npm run build`: Compila a aplicação para produção.
-* `npm run start`: Inicia o servidor em modo de produção (após `build`).
-* `npm run lint`: Executa o linter (ESLint) para verificar a qualidade do código.
-* `npm run seed`: Popula o banco de dados com dados iniciais (ex: utilizador Admin).
-* `npx prisma migrate dev`: Aplica migrações do banco de dados.
-* `npx prisma generate`: Gera o cliente Prisma.
-* `npx prisma studio`: Abre uma interface visual para interagir com o banco de dados.
+> **Projeto Acadêmico Integrador (Sistemas de Informação & Enfermagem)** > Uma solução SaaS moderna para otimizar o controle imunológico, agendamentos e conformidade de saúde ocupacional.
 
 ---
 
-Bom desenvolvimento! 🚀
+## 📸 Visão Geral
+
+O **UniVac** substitui planilhas manuais e inseguras por um sistema centralizado, auditável e visualmente rico. O foco é agilizar o trabalho da equipe de enfermagem e oferecer dados em tempo real para a gestão de RH.
+
+### ✨ Diferenciais & UX (Experiência do Usuário)
+* **Landing Page Imersiva:** Design moderno com efeitos de vidro (Glassmorphism), elementos 3D e copy focado em valor.
+* **Loading Cinemático:** Tela de inicialização simulando verificação de sistema com feedback visual de progresso.
+* **Dashboard Executivo:** KPIs em tempo real, gráficos de tendência e alertas de conformidade.
+* **Carteirinha Digital:** Geração automática de documento oficial de vacinação pronto para impressão/PDF.
+
+---
+
+## 🚀 Funcionalidades Principais
+
+### 🔐 Acesso & Segurança
+* **Autenticação Robusta:** Sistema de login via `NextAuth v5` com credenciais criptografadas.
+* **Controle de Acesso (RBAC):** Diferenciação entre perfis `ADMIN` (Gestão Total) e `FUNCIONÁRIO`.
+* **Proteção de Dados:** Rotas de API protegidas e validação de sessão via Middleware.
+
+### 🏥 Gestão de Saúde (Core)
+* **Catálogo de Vacinas:** Cadastro de imunizantes, definindo obrigatoriedade para cálculo de compliance.
+* **Gestão de Colaboradores:** CRUD completo com validação de CPF e bloqueio de exclusão para integridade histórica.
+* **Agenda Interativa:** Calendário visual (`react-big-calendar`) para marcar doses.
+* **Fluxo de Check-in:** Transforma um agendamento em uma aplicação confirmada com um clique, gerando histórico automaticamente.
+
+### 📊 Análise & Relatórios
+* **Indicadores de Conformidade:** Cálculo automático de quem está em dia, pendente ou atrasado.
+* **Gráficos Dinâmicos:** Visualização por tipo de vacina (Rosca) e evolução de aplicações (Linha).
+* **Exportação de Dados:** Geração de relatórios em CSV para auditoria externa.
+
+---
+
+## 🛠️ Stack Tecnológica
+
+O projeto foi construído utilizando as melhores práticas de desenvolvimento web moderno (2024/2025):
+
+* **Frontend:**
+    * [Next.js 14](https://nextjs.org/) (App Router, Server Actions)
+    * [Tailwind CSS](https://tailwindcss.com/) (Estilização Utility-First)
+    * [Framer Motion](https://www.framer.com/motion/) (Animações complexas e transições)
+    * [Lucide React](https://lucide.dev/) (Ícones vetoriais)
+    * [Sonner](https://sonner.emilkowalski.com/) (Notificações Toast elegantes)
+
+* **Backend & Dados:**
+    * **API:** Next.js API Routes (Serverless Functions)
+    * **Database:** PostgreSQL hospedado na nuvem ([Neon DB](https://neon.tech/))
+    * **ORM:** [Prisma](https://www.prisma.io/) (Tipagem forte e migrações)
+
+---
+
+## ⚙️ Instalação e Configuração
+
+Siga os passos abaixo para rodar o projeto localmente.
+
+### Pré-requisitos
+* Node.js 18+
+* Conta no Neon DB (ou um Postgres local)
+
+### Passo a Passo
+
+1.  **Clone o repositório:**
+    ```bash
+    git clone [https://github.com/seu-usuario/projeto-univac.git](https://github.com/seu-usuario/projeto-univac.git)
+    cd projeto-univac
+    ```
+
+2.  **Instale as dependências:**
+    ```bash
+    npm install
+    ```
+
+3.  **Configure as Variáveis de Ambiente:**
+    Crie um arquivo `.env` na raiz e preencha:
+    ```env
+    # Conexão com o Banco (Neon DB)
+    DATABASE_URL="postgresql://user:password@host/db?sslmode=require"
+
+    # Chave para criptografia de sessão (gere uma aleatória)
+    NEXTAUTH_SECRET="sua-chave-super-secreta"
+    NEXTAUTH_URL="http://localhost:3000"
+    ```
+
+4.  **Configure o Banco de Dados:**
+    ```bash
+    # Gera o cliente Prisma
+    npx prisma generate
+
+    # Cria as tabelas no banco
+    npx prisma migrate dev --name init
+
+    # (Opcional) Popula com dados iniciais (Admin)
+    npm run seed
+    ```
+
+5.  **Rode o projeto:**
+    ```bash
+    npm run dev
+    ```
+    Acesse [http://localhost:3000](http://localhost:3000).
+
+---
+
+## 🖼️ Galeria do Sistema
+
+*(Adicione aqui prints reais do seu sistema para valorizar o portfólio)*
+
+| Landing Page | Dashboard |
+| :---: | :---: |
+| ![Landing Page](/public/prints/landing.png) | ![Dashboard](/public/prints/dashboard.png) |
+
+| Agenda | Carteirinha Digital |
+| :---: | :---: |
+| ![Agenda](/public/prints/agenda.png) | ![Carteirinha](/public/prints/carteirinha.png) |
+
+---
+
+## 🤝 Contribuição
+
+Este é um projeto acadêmico open-source. Sugestões e Pull Requests são bem-vindos!
+
+---
+
+Desenvolvido com 💚 por **Luiz Antônio de Souza**, Renan Carlos, William, Isa

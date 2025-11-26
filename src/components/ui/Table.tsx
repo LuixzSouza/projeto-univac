@@ -1,6 +1,19 @@
 import React from 'react';
 
-// --- Interfaces to allow standard HTML attributes ---
+// --- Interfaces para permitir atributos HTML padrão ---
+
+interface TableProps extends React.TableHTMLAttributes<HTMLTableElement> {
+  children: React.ReactNode;
+}
+
+interface TableSectionProps extends React.HTMLAttributes<HTMLTableSectionElement> {
+  children: React.ReactNode;
+}
+
+// AQUI ESTAVA O PROBLEMA: Adicionamos suporte a props de linha (TR)
+interface TableRowProps extends React.HTMLAttributes<HTMLTableRowElement> {
+  children: React.ReactNode;
+}
 
 interface TableHeadProps extends React.ThHTMLAttributes<HTMLTableCellElement> {
   children: React.ReactNode;
@@ -13,10 +26,13 @@ interface TableCellProps extends React.TdHTMLAttributes<HTMLTableCellElement> {
 // --- Components ---
 
 // Componente principal da Tabela
-export function Table({ children }: { children: React.ReactNode }) {
+export function Table({ children, className, ...props }: TableProps) {
   return (
     <div className="overflow-x-auto rounded-lg bg-bg-base shadow-md border border-border">
-      <table className="w-full min-w-full divide-y divide-border">
+      <table 
+        className={`w-full min-w-full divide-y divide-border ${className || ''}`} 
+        {...props}
+      >
         {children}
       </table>
     </div>
@@ -24,18 +40,34 @@ export function Table({ children }: { children: React.ReactNode }) {
 }
 
 // Cabeçalho da Tabela
-export function TableHeader({ children }: { children: React.ReactNode }) {
-  return <thead className="bg-bg-surface">{children}</thead>;
+export function TableHeader({ children, className, ...props }: TableSectionProps) {
+  return (
+    <thead className={`bg-bg-surface ${className || ''}`} {...props}>
+      {children}
+    </thead>
+  );
 }
 
 // Corpo da Tabela
-export function TableBody({ children }: { children: React.ReactNode }) {
-  return <tbody className="divide-y divide-border bg-bg-base">{children}</tbody>;
+export function TableBody({ children, className, ...props }: TableSectionProps) {
+  return (
+    <tbody className={`divide-y divide-border bg-bg-base ${className || ''}`} {...props}>
+      {children}
+    </tbody>
+  );
 }
 
-// Linha da Tabela
-export function TableRow({ children }: { children: React.ReactNode }) {
-  return <tr className="hover:bg-border transition-colors">{children}</tr>;
+// Linha da Tabela (CORREÇÃO APLICADA AQUI)
+export function TableRow({ children, className, ...props }: TableRowProps) {
+  return (
+    <tr 
+      // Juntamos a classe padrão com a classe que vem de fora (className)
+      className={`hover:bg-border transition-colors ${className || ''}`} 
+      {...props} // Passamos o resto das props (onClick, key, etc)
+    >
+      {children}
+    </tr>
+  );
 }
 
 // Célula de Cabeçalho

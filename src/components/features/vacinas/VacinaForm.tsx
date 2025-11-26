@@ -4,11 +4,21 @@ import { useState, useEffect } from 'react'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
 import { Button } from '@/components/ui/Button'
-import { IVacina } from '@/lib/mock-data'
+import { Loader2 } from 'lucide-react' // Adicionei o ícone de loading
+import { toast } from 'sonner'
+import { formatTitleCase } from '@/lib/formatters' // <--- Importação da formatação
+
+interface IVacina {
+  id?: number
+  nome: string
+  descricao: string
+  obrigatoriedade: boolean
+}
 
 interface VacinaFormProps {
   onClose: () => void
   vacinaParaEditar: IVacina | null
+  onSuccess: () => void 
 }
 
 const estadoInicial = {
@@ -20,13 +30,15 @@ const estadoInicial = {
 export function VacinaForm({
   onClose,
   vacinaParaEditar,
+  onSuccess
 }: VacinaFormProps) {
   const [formData, setFormData] = useState(estadoInicial)
+  const [loading, setLoading] = useState(false)
 
   const modoEdicao = !!vacinaParaEditar
 
   useEffect(() => {
-    if (modoEdicao && vacinaParaEditar) { 
+    if (modoEdicao && vacinaParaEditar) {
       setFormData({
         nome: vacinaParaEditar.nome,
         descricao: vacinaParaEditar.descricao,
@@ -41,26 +53,52 @@ export function VacinaForm({
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     const { id, value } = e.target
-    if (id === 'obrigatoriedade') {
+    
+    // Aplica formatação visual
+    if (id === 'nome') {
+        // Força Primeira Letra Maiúscula (Estética)
+        setFormData((prev) => ({ ...prev, [id]: formatTitleCase(value) }))
+    }
+    else if (id === 'obrigatoriedade') {
       setFormData((prev) => ({ ...prev, obrigatoriedade: value === 'true' }))
     } else {
       setFormData((prev) => ({ ...prev, [id]: value }))
     }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setLoading(true)
 
-    if (modoEdicao && vacinaParaEditar) {
-      console.log('--- VACINA ATUALIZADA (MOCK) ---')
-      console.log({ id: vacinaParaEditar.id, ...formData })
-      alert('Vacina atualizada com sucesso! (Ver console)')
-    } else {
-      console.log('--- NOVA VACINA (MOCK) ---')
-      console.log(formData)
-      alert('Vacina adicionada com sucesso! (Ver console)')
+    try {
+      const url = modoEdicao 
+        ? `/api/vacinas/${vacinaParaEditar.id}` 
+        : '/api/vacinas' 
+      
+      const method = modoEdicao ? 'PUT' : 'POST'
+
+      const response = await fetch(url, {
+        method: method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Erro ao salvar')
+      }
+
+      toast.success(modoEdicao ? 'Vacina atualizada!' : 'Vacina criada com sucesso!')
+      onSuccess() 
+      onClose()   
+
+    } catch (error: any) {
+      toast.error(error.message || 'Erro ao salvar vacina')
+    } finally {
+      setLoading(false)
     }
-    onClose() 
   }
 
   return (
@@ -72,32 +110,49 @@ export function VacinaForm({
         value={formData.nome}
         onChange={handleChange}
         required
+        placeholder="Ex: Gripe H1N1"
       />
-      <Input
-        id="descricao"
-        label="Descrição"
-        type="text"
-        value={formData.descricao}
-        onChange={handleChange}
-        required
-      />
+      <div className="mt-4">
+        <Input
+          id="descricao"
+          label="Descrição"
+          type="text"
+          value={formData.descricao}
+          onChange={handleChange}
+          required
+          placeholder="Breve descrição..."
+        />
+      </div>
 
-      <Select
-        id="obrigatoriedade"
-        label="Obrigatoriedade"
-        value={String(formData.obrigatoriedade)} 
-        onChange={handleChange}
-      >
-        <option value="true">Obrigatória</option>
-        <option value="false">Não Obrigatória</option>
-      </Select>
+      <div className="mt-4">
+        <Select
+          id="obrigatoriedade"
+          label="Obrigatoriedade"
+          value={String(formData.obrigatoriedade)}
+          onChange={handleChange}
+        >
+          <option value="true">Obrigatória</option>
+          <option value="false">Não Obrigatória</option>
+        </Select>
+      </div>
 
-      <div className="mt-6 flex justify-end gap-3">
-        <Button type="button" variant="secondary" onClick={onClose}>
+      <div className="mt-6 flex justify-end gap-3 border-t border-border pt-4">
+        <Button 
+          type="button" 
+          variant="secondary" 
+          onClick={onClose}
+          disabled={loading}
+        >
           Cancelar
         </Button>
-        <Button type="submit" variant="primary">
-          {modoEdicao ? 'Salvar Alterações' : 'Salvar'}
+        <Button 
+          type="submit" 
+          variant="primary"
+          disabled={loading}
+          className="flex items-center gap-2"
+        >
+          {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+          {loading ? 'Salvando...' : (modoEdicao ? 'Salvar Alterações' : 'Salvar')}
         </Button>
       </div>
     </form>

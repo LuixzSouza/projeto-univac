@@ -2,12 +2,16 @@
 
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js'
 import { Pie } from 'react-chartjs-2'
-import { IFuncionario } from '@/lib/mock-data'
 
 ChartJS.register(ArcElement, Tooltip, Legend)
 
+// Interface simplificada
+interface FuncionarioSimples {
+  status: boolean
+}
+
 interface FuncionarioStatusChartProps {
-  funcionarios: IFuncionario[]
+  funcionarios: FuncionarioSimples[]
 }
 
 export function FuncionarioStatusChart({ funcionarios }: FuncionarioStatusChartProps) {
@@ -18,15 +22,15 @@ export function FuncionarioStatusChart({ funcionarios }: FuncionarioStatusChartP
     labels: ['Ativos', 'Inativos'],
     datasets: [
       {
-        label: 'Status dos Funcionários',
+        label: 'Quantidade',
         data: [ativos, inativos],
         backgroundColor: [
-          'var(--primary)',
-          '#ef4444',      
+          '#10b981', // Verde
+          '#ef4444', // Vermelho    
         ],
         borderColor: [
-          'var(--bg-surface)', 
-          'var(--bg-surface)', 
+          'rgba(255,255,255,0.1)', 
+          'rgba(255,255,255,0.1)', 
         ],
         borderWidth: 2,
       },
@@ -35,22 +39,25 @@ export function FuncionarioStatusChart({ funcionarios }: FuncionarioStatusChartP
 
   const options = {
     responsive: true,
+    maintainAspectRatio: false,
     plugins: {
       legend: {
         position: 'bottom' as const,
+        labels: {
+            color: '#9ca3af',
+            padding: 20
+        }
       },
       title: {
-        display: true,
-        text: 'Funcionários por Status',
-        font: {
-          size: 16, 
-        },
+        display: false,
       },
     },
   }
 
+  if (funcionarios.length === 0) return <div className="text-center text-sm text-text-muted">Sem dados.</div>;
+
   return (
-    <div className="rounded-lg bg-bg-surface p-6 shadow-md">
+    <div className="w-full h-full min-h-[220px] flex items-center justify-center">
       <Pie data={data} options={options} />
     </div>
   )

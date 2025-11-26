@@ -4,14 +4,17 @@ import { useState, useEffect } from 'react'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
 import { Button } from '@/components/ui/Button'
-import { IFuncionario } from '@/lib/mock-data'
+// Importamos a interface localmente para evitar erros de mock
+import { IFuncionario } from './FuncionarioTable' 
+import { toast } from 'sonner'
+import { formatCPF, formatRegistro, formatTitleCase } from '@/lib/formatters'
 
 interface FuncionarioFormProps {
   onClose: () => void
   funcionarioParaEditar: IFuncionario | null
+  onSuccess: () => void // Adicionado callback de sucesso
 }
 
-// Estado inicial do formulário
 const estadoInicial = {
   nome: '',
   email: '',
@@ -25,11 +28,12 @@ const estadoInicial = {
 export function FuncionarioForm({
   onClose,
   funcionarioParaEditar,
+  onSuccess
 }: FuncionarioFormProps) {
   const [formData, setFormData] = useState(estadoInicial)
+  const [loading, setLoading] = useState(false) // Estado de carregamento
   const modoEdicao = !!funcionarioParaEditar
 
-  // Quando abre o form, se for edição, preenche com os dados do funcionário
   useEffect(() => {
     if (modoEdicao && funcionarioParaEditar) {
       setFormData({
@@ -37,7 +41,7 @@ export function FuncionarioForm({
         email: funcionarioParaEditar.email,
         numeroRegistro: String(funcionarioParaEditar.numeroRegistro),
         cpf: funcionarioParaEditar.cpf,
-        senha: '',
+        senha: '', // Senha sempre começa vazia na edição
         role: funcionarioParaEditar.role,
         status: funcionarioParaEditar.status,
       })
@@ -46,23 +50,35 @@ export function FuncionarioForm({
     }
   }, [funcionarioParaEditar, modoEdicao])
 
-  // Atualiza o estado conforme o usuário digita
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { id, value } = e.target
-    if (id === 'status') {
-      setFormData((prev) => ({ ...prev, status: value === 'true' }))
-    } else {
-      setFormData((prev) => ({ ...prev, [id]: value }))
+    
+    // ... seus outros ifs (cpf, status) ...
+
+    if (id === 'cpf') {
+        setFormData((prev) => ({ ...prev, [id]: formatCPF(value) }))
+    }
+    else if (id === 'nome') {
+        setFormData((prev) => ({ ...prev, [id]: formatTitleCase(value) }))
+    }
+
+    else if (id === 'numeroRegistro') {
+        setFormData((prev) => ({ ...prev, [id]: formatRegistro(value) }))
+    }
+    else if (id === 'status') {
+        setFormData((prev) => ({ ...prev, status: value === 'true' }))
+    } 
+    else {
+        setFormData((prev) => ({ ...prev, [id]: value }))
     }
   }
 
-  // Submete para API
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setLoading(true)
 
     try {
-      const url =
-        modoEdicao && funcionarioParaEditar
+      const url = modoEdicao && funcionarioParaEditar
           ? `/api/funcionarios/${funcionarioParaEditar.id}`
           : '/api/funcionarios'
 
@@ -75,22 +91,21 @@ export function FuncionarioForm({
       })
 
       if (!response.ok) {
-        const { error } = await response.json()
-        alert(`Erro: ${error || 'Falha ao salvar funcionário'}`)
-        return
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Erro ao salvar')
       }
 
-      const data = await response.json()
-      alert(modoEdicao ? 'Funcionário atualizado com sucesso!' : 'Funcionário cadastrado com sucesso!')
-      console.log(data)
+      // Sucesso!
+      toast.success(modoEdicao ? 'Funcionário atualizado!' : 'Funcionário cadastrado!')
+      
+      onSuccess() // Chama a função para atualizar a tabela na página pai
+      onClose()   // Fecha o modal
 
-      // 🔥 Atualiza a lista em tempo real (sem alterar nada no seu front)
-      window.dispatchEvent(new Event("atualizar-funcionarios"))
-
-      onClose()
-    } catch (error) {
+    } catch (error: any) {
       console.error(error)
-      alert('Erro inesperado ao salvar funcionário.')
+      alert(error.message || 'Erro inesperado.')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -104,65 +119,85 @@ export function FuncionarioForm({
         onChange={handleChange}
         required
       />
-      <Input
-        id="email"
-        label="Email"
-        type="email"
-        value={formData.email}
-        onChange={handleChange}
-        required
-      />
-      <Input
-        id="numeroRegistro"
-        label="Nº de Registro"
-        type="number"
-        value={formData.numeroRegistro}
-        onChange={handleChange}
-        required
-      />
-      <Input
-        id="cpf"
-        label="CPF"
-        type="text"
-        value={formData.cpf}
-        onChange={handleChange}
-        required
-      />
-      <Input
-        id="senha"
-        label="Senha"
-        type="password"
-        value={formData.senha}
-        onChange={handleChange}
-        placeholder={modoEdicao ? '(Deixe em branco para não alterar)' : ''}
-      />
+      <div className="mt-4">
+        <Input
+            id="email"
+            label="Email"
+            type="email"
+            value={formData.email}
+            onChange={handleChange}
+            required
+        />
+      </div>
+      
+      <div className="grid grid-cols-2 gap-4 mt-4">
+        <Input
+            id="numeroRegistro"
+            label="Nº de Registro"
+            type="number"
+            value={formData.numeroRegistro}
+            onChange={handleChange}
+            required
+        />
+        <Input
+            id="cpf"
+            label="CPF"
+            type="text"
+            value={formData.cpf}
+            onChange={handleChange}
+            required
+        />
+      </div>
 
-      <Select
-        id="role"
-        label="Perfil"
-        value={formData.role}
-        onChange={handleChange}
-      >
-        <option value="FUNCIONARIO">Funcionário</option>
-        <option value="ADMIN">Admin</option>
-      </Select>
+      <div className="mt-4">
+        <Input
+            id="senha"
+            label="Senha"
+            type="password"
+            value={formData.senha}
+            onChange={handleChange}
+            placeholder={modoEdicao ? '(Deixe em branco para não alterar)' : 'Crie uma senha forte'}
+            required={!modoEdicao} // Senha é obrigatória apenas ao criar
+        />
+      </div>
 
-      <Select
-        id="status"
-        label="Status"
-        value={String(formData.status)}
-        onChange={handleChange}
-      >
-        <option value="true">Ativo</option>
-        <option value="false">Inativo</option>
-      </Select>
+      <div className="grid grid-cols-2 gap-4 mt-4">
+        <Select
+            id="role"
+            label="Perfil"
+            value={formData.role}
+            onChange={handleChange}
+        >
+            <option value="FUNCIONARIO">Funcionário</option>
+            <option value="ADMIN">Admin</option>
+        </Select>
+
+        <Select
+            id="status"
+            label="Status"
+            value={String(formData.status)}
+            onChange={handleChange}
+        >
+            <option value="true">Ativo</option>
+            <option value="false">Inativo</option>
+        </Select>
+      </div>
 
       <div className="mt-6 flex justify-end gap-3">
-        <Button type="button" variant="secondary" onClick={onClose}>
+        <Button 
+            type="button" 
+            variant="secondary" 
+            onClick={onClose}
+            disabled={loading}
+        >
           Cancelar
         </Button>
-        <Button type="submit" variant="primary">
-          {modoEdicao ? 'Salvar Alterações' : 'Salvar'}
+        <Button 
+            type="submit" 
+            variant="primary"
+            disabled={loading}
+        >
+          {loading ? 'Salvando...' : (modoEdicao ? 'Salvar Alterações' : 'Salvar')}
         </Button>
       </div>
     </form>

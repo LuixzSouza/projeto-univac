@@ -1,9 +1,19 @@
 'use client'
 
-import { IFuncionario } from '@/lib/mock-data'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/Table'
 import { Pencil, Trash2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+
+// Interface alinhada com o Prisma (ID é number)
+export interface IFuncionario {
+  id: number
+  nome: string
+  email: string
+  numeroRegistro: number
+  cpf: string
+  role: string
+  status: boolean
+}
 
 interface FuncionarioTableProps {
   data: IFuncionario[]
@@ -13,10 +23,6 @@ interface FuncionarioTableProps {
 
 export function FuncionarioTable({ data, onEdit, onDelete }: FuncionarioTableProps) {
   const router = useRouter()
-
-  const handleRowClick = (id: string) => {
-    router.push(`/funcionarios/${id}`)
-  }
 
   return (
     <Table>
@@ -32,33 +38,33 @@ export function FuncionarioTable({ data, onEdit, onDelete }: FuncionarioTablePro
       </TableHeader>
       <TableBody>
         {data.map((funcionario) => (
-          <TableRow key={funcionario.id}>
+          <TableRow key={funcionario.id} className="hover:bg-bg-base/50 transition-colors">
             <TableCell
-              onClick={() => router.push(`/funcionarios/${funcionario.id.toString()}`)}
-              className="font-medium cursor-pointer hover:underline"
+              onClick={() => router.push(`/funcionarios/${funcionario.id}`)}
+              className="font-medium cursor-pointer hover:underline text-text-base"
             >
               {funcionario.nome}
             </TableCell>
             <TableCell
-              onClick={() => router.push(`/funcionarios/${funcionario.id.toString()}`)}
+              onClick={() => router.push(`/funcionarios/${funcionario.id}`)}
               className="text-text-muted cursor-pointer hover:underline"
             >
               {funcionario.email}
             </TableCell>
             <TableCell
-              onClick={() => router.push(`/funcionarios/${funcionario.id.toString()}`)}
+              onClick={() => router.push(`/funcionarios/${funcionario.id}`)}
               className="text-text-muted cursor-pointer hover:underline"
             >
               {funcionario.numeroRegistro}
             </TableCell>
             <TableCell
-              onClick={() => router.push(`/funcionarios/${funcionario.id.toString()}`)}
+              onClick={() => router.push(`/funcionarios/${funcionario.id}`)}
             >
               <span
                 className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold
                   ${funcionario.role === 'ADMIN'
                     ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
-                    : 'bg-border text-text-muted'
+                    : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400 border border-gray-200 dark:border-gray-700'
                   }
                 `}
               >
@@ -66,7 +72,7 @@ export function FuncionarioTable({ data, onEdit, onDelete }: FuncionarioTablePro
               </span>
             </TableCell>
             <TableCell
-              onClick={() => router.push(`/funcionarios/${funcionario.id.toString()}`)}
+              onClick={() => router.push(`/funcionarios/${funcionario.id}`)}
             >
               <span
                 className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold
@@ -84,14 +90,14 @@ export function FuncionarioTable({ data, onEdit, onDelete }: FuncionarioTablePro
               <div className="flex justify-center space-x-3">
                 <button
                   onClick={(e) => { e.stopPropagation(); onEdit(funcionario) }}
-                  className="text-primary transition-colors hover:text-primary-dark dark:text-primary-light dark:hover:text-primary"
+                  className="text-primary transition-colors hover:text-primary/80 p-1 hover:bg-primary/10 rounded"
                   title="Editar"
                 >
                   <Pencil size={18} />
                 </button>
                 <button
                   onClick={(e) => { e.stopPropagation(); onDelete(funcionario) }}
-                  className="text-red-600 transition-colors hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
+                  className="text-red-600 transition-colors hover:text-red-800 p-1 hover:bg-red-100 dark:hover:bg-red-900/20 rounded"
                   title="Excluir"
                 >
                   <Trash2 size={18} />

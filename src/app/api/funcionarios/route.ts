@@ -1,59 +1,101 @@
-// app/api/funcionarios/route.ts
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db";
 import bcrypt from "bcryptjs";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
-export async function POST(request: Request) {
+// LISTAR FUNCIONÁRIOS
+export async function GET() {
   try {
-    const body = await request.json();
-    const { nome, numeroRegistro, cpf, email, senha, role, status } = body;
-
-    if (!nome || !numeroRegistro || !cpf || !email || !senha) {
-      return NextResponse.json(
-        { error: "Campos obrigatórios faltando" },
-        { status: 400 }
-      );
-    }
-
-    const senhaHash = await bcrypt.hash(senha, 10);
-
-    const novoFuncionario = await prisma.funcionarioUsuario.create({
-      data: {
-        nome,
-        numeroRegistro: Number(numeroRegistro),
-        cpf,
-        email,
-        senha: senhaHash,
-        role,
-        status,
-      },
+    // Buscamos todos, mas é boa prática NÃO retornar a senha hashed para o front
+    const funcionarios = await prisma.funcionarioUsuario.findMany({
+      orderBy: { nome: 'asc' },
+      select: {
+        id: true,
+        nome: true,
+        email: true,
+        cpf: true,
+        numeroRegistro: true,
+        role: true,
+        status: true,
+        // senha: false // Omissão explícita
+      }
     });
 
-    return NextResponse.json(novoFuncionario, { status: 201 });
-
-  } catch (error: any) {
-    console.error("Erro no POST /api/funcionarios:", error);
+    return NextResponse.json(funcionarios);
+  } catch (error) {
+    console.error("Erro ao buscar funcionários:", error);
     return NextResponse.json(
-      { error: error.message || "Erro ao criar funcionário" },
+      { error: "Erro ao buscar funcionários" },
       { status: 500 }
     );
   }
 }
 
-// =========================
-// AQUI ESTÁ O GET ⬇⬇⬇
-// =========================
-export async function GET() {
+// CRIAR FUNCIONÁRIO
+export async function POST(request: Request) {
   try {
-    const funcionarios = await prisma.funcionarioUsuario.findMany({
-      orderBy: { id: "desc" }
+    const session = await getServerSession(authOptions);
+    
+    // Apenas ADMIN pode criar novos usuários
+    if (session?.user.role !== "ADMIN") {
+      return NextResponse.json({ error: "Acesso negado. Apenas Admin." }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const { nome, email, cpf, numeroRegistro, senha, role, status } = body;
+
+    // 1. Validação Básica
+    if (!nome || !email || !cpf || !senha || !numeroRegistro) {
+      return NextResponse.json(
+        { error: "Todos os campos obrigatórios devem ser preenchidos" },
+        { status: 400 }
+      );
+    }
+
+    // 2. Verificar duplicidade (Email, CPF ou Registro)
+    const existe = await prisma.funcionarioUsuario.findFirst({
+      where: {
+        OR: [
+          { email },
+          { cpf },
+          { numeroRegistro: Number(numeroRegistro) }
+        ]
+      }
     });
 
-    return NextResponse.json(funcionarios);
-  } catch (error: any) {
-    console.error("Erro no GET /api/funcionarios:", error);
+    if (existe) {
+      return NextResponse.json(
+        { error: "Já existe um usuário com este Email, CPF ou Nº Registro." },
+        { status: 409 }
+      );
+    }
+
+    // 3. Criptografar a senha
+    const hashedPassword = await bcrypt.hash(senha, 10);
+
+    // 4. Criar no Banco
+    const novoFuncionario = await prisma.funcionarioUsuario.create({
+      data: {
+        nome,
+        email,
+        cpf,
+        numeroRegistro: Number(numeroRegistro),
+        senha: hashedPassword,
+        role: role || "FUNCIONARIO",
+        status: status !== undefined ? status : true
+      }
+    });
+
+    // Remove a senha antes de devolver a resposta
+    const { senha: _, ...funcionarioSemSenha } = novoFuncionario;
+
+    return NextResponse.json(funcionarioSemSenha, { status: 201 });
+
+  } catch (error) {
+    console.error("Erro ao criar funcionário:", error);
     return NextResponse.json(
-      { error: error.message || "Erro ao buscar funcionários" },
+      { error: "Erro interno ao criar funcionário" },
       { status: 500 }
     );
   }

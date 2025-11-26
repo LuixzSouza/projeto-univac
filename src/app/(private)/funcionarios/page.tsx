@@ -1,53 +1,57 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
-import { IFuncionario } from '@/lib/mock-data'
-import { FuncionarioTable } from '@/components/features/funcionarios/FuncionarioTable'
+import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useSession } from 'next-auth/react' // <--- Importe de Sessão
+import { FuncionarioTable, IFuncionario } from '@/components/features/funcionarios/FuncionarioTable'
+import { FuncionarioForm } from '@/components/features/funcionarios/FuncionarioForm'
+
 import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
-import { FuncionarioForm } from '@/components/features/funcionarios/FuncionarioForm'
 import { ConfirmationModal } from '@/components/ui/ConfirmationModal'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Plus, Users, Search, Filter as FilterIcon } from 'lucide-react'
 import { PaginationControls } from '@/components/ui/PaginationControls'
+import { toast } from 'sonner'
+import { logAction } from '@/lib/logger' // <--- Importe do Logger
 
 export default function FuncionariosPage() {
+  const { data: session } = useSession() // <--- Pegamos quem está logado
   const [filtroFuncionarios, setFiltroFuncionarios] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage] = useState(5)
+  
   const [isFormModalOpen, setIsFormModalOpen] = useState(false)
   const [funcionarioEmEdicao, setFuncionarioEmEdicao] = useState<IFuncionario | null>(null)
+  
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [funcionarioParaExcluir, setFuncionarioParaExcluir] = useState<IFuncionario | null>(null)
+  
   const [isLoading, setIsLoading] = useState(true)
   const [funcionarios, setFuncionarios] = useState<IFuncionario[]>([])
 
-  // =====================================================
-  // 🚀 CARREGA DO BANCO DE DADOS (SEM MOCK)
-  // =====================================================
-  async function carregarFuncionarios() {
+  // --- CARREGA DO BANCO DE DADOS ---
+  const carregarFuncionarios = useCallback(async () => {
     try {
+      if (funcionarios.length === 0) setIsLoading(true)
+      
       const res = await fetch('/api/funcionarios', { cache: 'no-store' })
+      if (!res.ok) throw new Error('Falha ao buscar')
+      
       const dados = await res.json()
       setFuncionarios(dados)
-      setIsLoading(false)
     } catch (e) {
       console.error("Erro ao carregar funcionários:", e)
+      toast.error("Erro ao carregar lista.")
+    } finally {
+      setIsLoading(false)
     }
-  }
+  }, [funcionarios.length])
 
   useEffect(() => {
     carregarFuncionarios()
-  }, [])
+  }, [carregarFuncionarios])
 
-  // =====================================================
-  // 🚀 RECEBE NOVOS FUNCIONÁRIOS AO SALVAR SEM RELOAD
-  // =====================================================
-  const handleAfterSave = async () => {
-    await carregarFuncionarios()
-    handleCloseFormModal()
-  }
-
+  // --- FILTROS E PAGINAÇÃO ---
   const funcionariosFiltrados = useMemo(() => {
     if (!filtroFuncionarios) return funcionarios
     const lowerFilter = filtroFuncionarios.toLowerCase()
@@ -70,6 +74,7 @@ export default function FuncionariosPage() {
     setCurrentPage(1)
   }
 
+  // --- MODAIS ---
   const handleOpenAddModal = () => { 
     setFuncionarioEmEdicao(null) 
     setIsFormModalOpen(true) 
@@ -95,28 +100,51 @@ export default function FuncionariosPage() {
     setTimeout(() => setFuncionarioParaExcluir(null), 300) 
   }
 
-  // =====================================================
-  // 🚀 EXCLUI DINAMICAMENTE SEM RECARREGAR
-  // =====================================================
+  // --- AÇÕES DE API ---
+  const handleSuccessSave = async () => {
+    await carregarFuncionarios()
+  }
+
   const handleConfirmDelete = async () => {
     if (!funcionarioParaExcluir) return
 
     try {
-      await fetch(`/api/funcionarios/${funcionarioParaExcluir.id}`, {
+      // Mostra loading
+      const toastId = toast.loading("Excluindo funcionário...")
+
+      const res = await fetch(`/api/funcionarios/${funcionarioParaExcluir.id}`, {
         method: 'DELETE'
       })
 
-      await carregarFuncionarios()
+      if (!res.ok) {
+         const erro = await res.json()
+         toast.dismiss(toastId)
+         toast.error(erro.error || "Erro ao excluir")
+         return
+      }
 
-      alert(`Funcionário "${funcionarioParaExcluir.nome}" excluído com sucesso!`)
+      // ✅ AUDITORIA: Registra quem apagou quem
+      await logAction(
+        "EXCLUSAO", 
+        "Funcionário", 
+        `Excluiu o funcionário: ${funcionarioParaExcluir.nome} (Reg: ${funcionarioParaExcluir.numeroRegistro})`, 
+        session?.user?.email || "Admin"
+      );
+
+      // Sucesso
+      toast.dismiss(toastId)
+      toast.success(`Funcionário "${funcionarioParaExcluir.nome}" excluído!`)
+      
+      await carregarFuncionarios() 
     } catch (erro) {
       console.error("Erro ao excluir:", erro)
+      toast.error("Erro de conexão ao tentar excluir.")
     }
 
     handleCloseDeleteModal()
   }
 
-  if (isLoading) return (
+  if (isLoading && funcionarios.length === 0) return (
     <div className="flex h-full min-h-[50vh] items-center justify-center">
       <div className="h-8 w-8 animate-spin rounded-full border-4 border-border border-t-primary"></div>
     </div>
@@ -133,7 +161,7 @@ export default function FuncionariosPage() {
         </Button>
       </motion.div>
 
-      <motion.div className="space-y-4 rounded-lg bg-bg-surface p-6 shadow-md">
+      <motion.div className="space-y-4 rounded-lg bg-bg-surface p-6 shadow-md border border-border">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className='relative flex-grow md:max-w-xs'>
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
@@ -144,7 +172,7 @@ export default function FuncionariosPage() {
               placeholder="Filtrar por nome, email, registro..."
               value={filtroFuncionarios}
               onChange={handleFiltroChange}
-              className="w-full rounded border border-border bg-bg-base py-2 pl-9 pr-3 text-sm text-text-base placeholder:text-text-muted"
+              className="w-full rounded border border-border bg-bg-base py-2 pl-9 pr-3 text-sm text-text-base placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50"
             />
           </div>
           <p className="flex-shrink-0 text-sm text-text-muted">
@@ -189,7 +217,8 @@ export default function FuncionariosPage() {
             title={funcionarioEmEdicao ? 'Editar Funcionário' : 'Novo Funcionário'}
           >
             <FuncionarioForm 
-              onClose={handleAfterSave}
+              onClose={handleCloseFormModal}
+              onSuccess={handleSuccessSave}
               funcionarioParaEditar={funcionarioEmEdicao}
             />
           </Modal>

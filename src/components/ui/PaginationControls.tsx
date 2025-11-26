@@ -18,51 +18,50 @@ export function PaginationControls({
   itemsPerPage,
   totalItems
 }: PaginationControlsProps) {
-  if (totalPages <= 1) return null 
+  // Se não tem itens ou só tem 1 página, esconde (opcional, mas limpa a tela)
+  if (totalItems === 0) return null; 
 
   const handlePrevious = () => {
-    if (currentPage > 1) {
-      onPageChange(currentPage - 1)
-    }
+    if (currentPage > 1) onPageChange(currentPage - 1)
   }
 
   const handleNext = () => {
-    if (currentPage < totalPages) {
-      onPageChange(currentPage + 1)
-    }
+    if (currentPage < totalPages) onPageChange(currentPage + 1)
   }
 
-  // Calcula os itens mostrados na página atual
-  const firstItem = (currentPage - 1) * itemsPerPage + 1;
+  // Lógica corrigida para exibição
+  const firstItem = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
   const lastItem = Math.min(currentPage * itemsPerPage, totalItems);
 
-
   return (
-    // Usa a cor de borda do tema
-    <div className="mt-4 flex flex-col items-center justify-between gap-2 border-t pt-4 border-border sm:flex-row">
-       <span className="text-sm text-text-muted">
-         Mostrando {firstItem}–{lastItem} de {totalItems} resultados
-       </span>
+    <div className="mt-5 flex flex-col items-center justify-between gap-4 border-t border-border pt-4 sm:flex-row">
+       
+       <p className="text-sm text-text-muted">
+         Mostrando <span className="font-medium text-text-base">{firstItem}</span> até <span className="font-medium text-text-base">{lastItem}</span> de <span className="font-medium text-text-base">{totalItems}</span> resultados
+       </p>
+
        <div className="flex items-center gap-2">
          <Button
            onClick={handlePrevious}
            disabled={currentPage === 1}
            variant="secondary"
            size="sm"
-           className="flex items-center gap-1"
+           className="flex items-center gap-1 pl-2 pr-3"
          >
            <ChevronLeft size={16} />
            Anterior
          </Button>
-         <span className="text-sm text-text-muted">
-           Pág {currentPage} / {totalPages}
+         
+         <span className="text-sm font-medium text-text-base px-2">
+           {currentPage} / {totalPages}
          </span>
+         
          <Button
            onClick={handleNext}
            disabled={currentPage === totalPages}
            variant="secondary"
            size="sm" 
-           className="flex items-center gap-1"
+           className="flex items-center gap-1 pl-3 pr-2"
          >
            Próximo
            <ChevronRight size={16} />

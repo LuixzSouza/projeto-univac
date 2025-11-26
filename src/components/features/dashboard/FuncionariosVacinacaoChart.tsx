@@ -1,15 +1,26 @@
-// /src/components/features/dashboard/FuncionariosVacinacaoChart.tsx
 'use client'
 
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js'
 import { Pie } from 'react-chartjs-2'
-import { IFuncionario } from '@/lib/mock-data'
 import { useEffect, useMemo, useState } from 'react'
 
 ChartJS.register(ArcElement, Tooltip, Legend)
 
+// Interfaces Locais
+interface VacinaSimples {
+  id: number
+  obrigatoriedade: boolean
+}
+
+interface FuncionarioComApps {
+  id: number
+  status: boolean
+  aplicacoes: { vacinaId: number }[]
+}
+
 interface ChartProps {
-  funcionarios: IFuncionario[]
+  funcionarios: FuncionarioComApps[]
+  vacinas?: VacinaSimples[] // Opcional para evitar erro se não passar agora, mas ideal passar
 }
 
 interface ChartColors {
@@ -20,40 +31,55 @@ interface ChartColors {
   text: string
 }
 
-export function FuncionariosVacinacaoChart({ funcionarios }: ChartProps) {
+export function FuncionariosVacinacaoChart({ funcionarios, vacinas = [] }: ChartProps) {
   const [chartColors, setChartColors] = useState<ChartColors>({
-    success: '#16a34a', // Default Verde
-    primary: '#3b82f6', // Default Azul
-    danger: '#ef4444', // Default Vermelho
-    border: '#ffffff', // Default Borda
-    text: '#6b7280', // Default Texto (cinza)
+    success: '#16a34a', 
+    primary: '#3b82f6', 
+    danger: '#ef4444', 
+    border: '#ffffff', 
+    text: '#6b7280', 
   })
 
+  // Sincroniza cores com o CSS do Tema (Dark/Light)
   useEffect(() => {
     const style = getComputedStyle(document.documentElement)
-
-    const getColor = (varName: string, fallback: string) =>
-      style.getPropertyValue(varName).trim() || fallback
+    const getColor = (varName: string, fallback: string) => style.getPropertyValue(varName).trim() || fallback
 
     setChartColors({
-      success: getColor('--color-success', chartColors.success),
-      primary: getColor('--color-primary', chartColors.primary),
-      danger: getColor('--color-danger', chartColors.danger),
-      border: getColor('--color-bg-surface', chartColors.border),
-      text: getColor('--color-text-muted', chartColors.text),
+      success: '#10b981', // Verde Primary
+      primary: '#f59e0b', // Amarelo (Parcial)
+      danger: '#ef4444',  // Vermelho
+      border: getColor('--bg-surface', '#ffffff'),
+      text: getColor('--text-muted', '#6b7280'),
     })
   }, []) 
 
   const chartData = useMemo(() => {
-    const completo = funcionarios.filter(
-      (f) => f.statusVacinacao === 'completo',
-    ).length
-    const parcial = funcionarios.filter(
-      (f) => f.statusVacinacao === 'parcial',
-    ).length
-    const nenhum = funcionarios.filter(
-      (f) => f.statusVacinacao === 'nenhum',
-    ).length
+    const vacinasObrigatorias = vacinas.filter(v => v.obrigatoriedade);
+    const idsObrigatorios = vacinasObrigatorias.map(v => v.id);
+
+    let completo = 0;
+    let parcial = 0;
+    let nenhum = 0;
+
+    funcionarios.forEach(func => {
+        const apps = func.aplicacoes || [];
+        const tomadasIds = apps.map(a => a.vacinaId);
+
+        if (apps.length === 0) {
+            nenhum++;
+        } else {
+            // Verifica se tomou TODAS as obrigatórias
+            const tomouTodasObrigatorias = idsObrigatorios.every(id => tomadasIds.includes(id));
+            
+            // Se não tiver vacinas obrigatórias cadastradas no sistema, qualquer dose conta como completo ou regra específica
+            if (idsObrigatorios.length > 0 && tomouTodasObrigatorias) {
+                completo++;
+            } else {
+                parcial++;
+            }
+        }
+    });
 
     return {
       labels: ['Totalmente Vacinados', 'Parcialmente Vacinados', 'Não Vacinados'],
@@ -70,11 +96,12 @@ export function FuncionariosVacinacaoChart({ funcionarios }: ChartProps) {
         },
       ],
     }
-  }, [funcionarios, chartColors])
+  }, [funcionarios, vacinas, chartColors])
 
   const chartOptions = useMemo(
     () => ({
       responsive: true,
+      maintainAspectRatio: false,
       plugins: {
         legend: {
           position: 'bottom' as const,
@@ -94,19 +121,16 @@ export function FuncionariosVacinacaoChart({ funcionarios }: ChartProps) {
 
   if (funcionarios.length === 0) {
     return (
-      <div className="flex h-full min-h-[300px] w-full items-center justify-center rounded-lg bg-bg-surface p-6 text-center shadow-md">
-        <h3 className="text-lg font-semibold text-text-muted">
-          Nenhum dado de vacinação para exibir.
+      <div className="flex h-full min-h-[220px] w-full items-center justify-center text-center">
+        <h3 className="text-sm font-medium text-text-muted">
+          Aguardando dados...
         </h3>
       </div>
     )
   }
 
   return (
-    <div className="rounded-lg bg-bg-surface p-6 shadow-md">
-      <h3 className="mb-4 text-lg font-semibold text-center text-text-base">
-        Funcionários por Vacinação
-      </h3>
+    <div className="w-full h-full min-h-[220px] flex items-center justify-center">
       <Pie data={chartData} options={chartOptions} />
     </div>
   )

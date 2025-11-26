@@ -1,113 +1,53 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
-interface Params {
-  params: { id: string };
-}
-
-// GET - Buscar um agendamento
-export async function GET(request: Request, { params }: Params) {
+// ATUALIZAR (Status ou Data)
+export async function PUT(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
   try {
-    console.log(`📌 GET /api/agendamentos/${params.id}`);
+    const session = await getServerSession(authOptions);
+    if (!session) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
-    const agendamento = await prisma.agendamento.findUnique({
-      where: { id: Number(params.id) },
-      include: {
-        funcionario: true,
-        vacina: true,
-      },
+    const id = parseInt(params.id);
+    const body = await request.json();
+    const { status, dataAgendamento } = body;
+
+    const updateData: any = {};
+    if (status) updateData.status = status;
+    if (dataAgendamento) updateData.dataAgendamento = new Date(dataAgendamento);
+
+    const agendamento = await prisma.agendamento.update({
+      where: { id },
+      data: updateData
     });
 
-    if (!agendamento) {
-      return NextResponse.json(
-        { error: "Agendamento não encontrado" },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json(agendamento, { status: 200 });
-
+    return NextResponse.json(agendamento);
   } catch (error) {
-    console.error(`❌ Erro ao buscar agendamento ${params.id}:`, error);
-    return NextResponse.json(
-      { error: "Erro ao buscar agendamento" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Erro ao atualizar" }, { status: 500 });
   }
 }
 
-// PUT - Atualizar agendamento
-export async function PUT(request: Request, { params }: Params) {
+// DELETAR
+export async function DELETE(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
   try {
-    const data = await request.json();
-    const { funcionarioId, vacinaId, start, end, status } = data;
+    const session = await getServerSession(authOptions);
+    if (!session) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
-    console.log(`✏ Atualizando agendamento ${params.id}`, data);
-
-    const updateData: any = {
-      funcionarioId: Number(funcionarioId),
-      vacinaId: Number(vacinaId),
-      start: new Date(start),
-      end: new Date(end),
-      status,
-    };
-
-    // Verifica conflito de horário
-    const conflito = await prisma.agendamento.findFirst({
-      where: {
-        funcionarioId: Number(funcionarioId),
-        id: { not: Number(params.id) },
-        OR: [
-          {
-            start: { lte: new Date(end) },
-            end: { gte: new Date(start) },
-          },
-        ],
-      },
-    });
-
-    if (conflito) {
-      return NextResponse.json(
-        { error: "O funcionário já possui um agendamento nesse horário" },
-        { status: 409 }
-      );
-    }
-
-    const atualizado = await prisma.agendamento.update({
-      where: { id: Number(params.id) },
-      data: updateData,
-    });
-
-    return NextResponse.json(atualizado, { status: 200 });
-
-  } catch (error) {
-    console.error("❌ Erro ao atualizar agendamento:", error);
-    return NextResponse.json(
-      { error: "Erro ao atualizar agendamento" },
-      { status: 500 }
-    );
-  }
-}
-
-// DELETE - Excluir agendamento
-export async function DELETE(request: Request, { params }: Params) {
-  try {
-    console.log(`🗑 Excluindo agendamento ${params.id}`);
+    const id = parseInt(params.id);
 
     await prisma.agendamento.delete({
-      where: { id: Number(params.id) },
+      where: { id }
     });
 
-    return NextResponse.json(
-      { message: "Agendamento excluído com sucesso" },
-      { status: 200 }
-    );
-
+    return NextResponse.json({ message: "Agendamento cancelado" });
   } catch (error) {
-    console.error("❌ Erro ao excluir agendamento:", error);
-    return NextResponse.json(
-      { error: "Erro ao excluir agendamento" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Erro ao cancelar" }, { status: 500 });
   }
 }

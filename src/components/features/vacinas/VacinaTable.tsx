@@ -1,92 +1,82 @@
-'use client'
+"use client";
 
-import { IVacina } from '@/lib/mock-data'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/Table'
-import { Pencil, Trash2 } from 'lucide-react' 
+import { Edit, Trash2, Syringe } from "lucide-react";
 
-interface VacinaTableProps {
-  data: IVacina[]
-  onEdit: (vacina: IVacina) => void
-  onDelete: (vacina: IVacina) => void
+interface IVacina {
+  id: number;
+  nome: string;
+  descricao: string;
+  obrigatoriedade: boolean;
 }
 
-export function VacinaTable({ data, onEdit, onDelete }: VacinaTableProps) {
+interface VacinaTableProps {
+  data: IVacina[];
+  onEdit: (vacina: IVacina) => void;
+  onDelete: (vacina: IVacina) => void;
+}
+
+export default function VacinaTable({ data, onEdit, onDelete }: VacinaTableProps) {
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Nome da Vacina</TableHead>
-          <TableHead>Descrição</TableHead>
-          <TableHead>Obrigatoriedade</TableHead>
-          <TableHead className="text-right">Total Aplicações</TableHead>
-          <TableHead className="text-center">Ações</TableHead> 
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {data.map((vacina) => (
-          <TableRow key={vacina.id}>
-            <TableCell className="font-medium">{vacina.nome}</TableCell>
-
-            <TableCell className="max-w-xs truncate text-text-muted" title={vacina.descricao}>
-              {vacina.descricao}
-            </TableCell>
-
-            <TableCell>
-              <span
-                className={`rounded-full px-2.5 py-0.5 text-xs font-semibold
-                  ${vacina.obrigatoriedade
-                      ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
-                      : 'bg-border text-text-muted' 
-                  }
-                `}
+    // Usa bg-bg-surface para respeitar o tema dark/light definido no seu CSS
+    <div className="bg-bg-surface shadow-md rounded-lg overflow-hidden border border-border">
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm text-left">
+          <thead className="bg-bg-base text-text-muted font-medium uppercase text-xs">
+            <tr>
+              <th className="px-6 py-3">Nome da Vacina</th>
+              <th className="px-6 py-3">Descrição</th>
+              <th className="px-6 py-3 text-center">Tipo</th>
+              <th className="px-6 py-3 text-right">Ações</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {data.map((vacina) => (
+              <tr 
+                key={vacina.id} 
+                className="hover:bg-bg-base/50 transition-colors"
               >
-                {vacina.obrigatoriedade ? 'Obrigatória' : 'Opcional'}
-              </span>
-            </TableCell>
-
-            <TableCell className="text-right font-medium text-text-base">
-              {vacina.totalAplicacoes?.toLocaleString('pt-BR') ?? '-'} 
-            </TableCell>
-
-            <TableCell className="text-center">
-              <div className="flex justify-center space-x-3">
-                <button
-                  onClick={() => onEdit(vacina)}
-                  className="text-blue-600 transition-colors hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                  title="Editar Vacina" 
-                >
-                  <Pencil size={18} />
-                  <span className="sr-only">Editar</span>
-                </button>
-
-                <button
-                  onClick={() => onDelete(vacina)}
-                  className="text-red-600 transition-colors hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
-                  title="Excluir Vacina" 
-                >
-                  <Trash2 size={18} />
-                  <span className="sr-only">Excluir</span>
-                </button>
-              </div>
-            </TableCell>
-          </TableRow>
-        ))}
-
-        {data.length === 0 && (
-          <TableRow>
-             <TableCell colSpan={5} className="text-center text-text-muted py-6">
-               Nenhum tipo de vacina encontrado.
-             </TableCell>
-          </TableRow>
-        )}
-      </TableBody>
-    </Table>
-  )
+                <td className="px-6 py-4 font-medium text-text-base flex items-center gap-3">
+                  {/* Usa a cor Primary (Verde) do seu tema */}
+                  <div className="p-2 bg-primary/10 text-primary rounded-full">
+                    <Syringe size={16} />
+                  </div>
+                  {vacina.nome}
+                </td>
+                <td className="px-6 py-4 text-text-muted max-w-xs truncate">
+                  {vacina.descricao}
+                </td>
+                <td className="px-6 py-4 text-center">
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-semibold border ${
+                      vacina.obrigatoriedade
+                        ? "bg-red-500/10 text-red-600 border-red-500/20"
+                        : "bg-green-500/10 text-green-600 border-green-500/20"
+                    }`}
+                  >
+                    {vacina.obrigatoriedade ? "Obrigatória" : "Opcional"}
+                  </span>
+                </td>
+                <td className="px-6 py-4 text-right space-x-2">
+                  <button
+                    onClick={() => onEdit(vacina)}
+                    className="text-primary hover:text-primary/80 p-1 hover:bg-primary/10 rounded transition"
+                    title="Editar"
+                  >
+                    <Edit size={18} />
+                  </button>
+                  <button
+                    onClick={() => onDelete(vacina)}
+                    className="text-red-500 hover:text-red-700 p-1 hover:bg-red-500/10 rounded transition"
+                    title="Excluir"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
 }

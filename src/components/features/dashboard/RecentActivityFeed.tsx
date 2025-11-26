@@ -1,33 +1,47 @@
 'use client'
-import { IAplicacao } from '@/lib/mock-data'
-import { formatDistanceToNow } from 'date-fns' // Para "há X minutos"
+
+import { formatDistanceToNow } from 'date-fns' 
 import { ptBR } from 'date-fns/locale'
-import { Syringe } from 'lucide-react'
+import { Syringe, Activity } from 'lucide-react'
+
+// Interface compatível com o retorno da API do Dashboard
+interface AtividadeRecente {
+  id: number
+  dataAplicacao: string // Vem como string do JSON
+  lote: string
+  funcionario: { nome: string }
+  vacina: { nome: string }
+}
 
 interface RecentActivityFeedProps {
-  atividades: IAplicacao[] 
+  atividades: AtividadeRecente[] 
 }
 
 export function RecentActivityFeed({ atividades }: RecentActivityFeedProps) {
   return (
-    <div className="rounded-lg bg-bg-surface p-6 shadow-md h-full flex flex-col">
-      <h3 className="text-lg font-semibold mb-4 text-text-base">Atividade Recente</h3>
+    <div className="rounded-lg bg-bg-surface p-6 shadow-md h-full flex flex-col border border-border">
+      <h3 className="text-lg font-semibold mb-4 text-text-base flex items-center gap-2 border-b pb-2 border-border">
+        <Activity size={18}/> Atividade Recente
+      </h3>
+      
       {atividades.length === 0 ? (
-          <p className="text-sm text-text-muted flex-grow flex items-center justify-center">Nenhuma atividade recente.</p>
+          <p className="text-sm text-text-muted flex-grow flex items-center justify-center opacity-50">
+            Nenhuma atividade recente.
+          </p>
       ) : (
-        <ul className="space-y-4 overflow-y-auto max-h-[250px] flex-grow pr-2"> {/* Scroll e altura max */}
+        <ul className="space-y-4 overflow-y-auto max-h-[250px] flex-grow pr-2 custom-scrollbar"> 
           {atividades.map((app) => (
-            <li key={app.id} className="flex items-start gap-3 border-b pb-2 border-border last:border-b-0">
-              <div className="mt-1 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                <Syringe size={16} />
+            <li key={app.id} className="flex items-start gap-3 border-b pb-3 border-border last:border-b-0 last:pb-0">
+              <div className="mt-1 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary border border-primary/20">
+                <Syringe size={14} />
               </div>
               <div>
                 <p className="text-sm font-medium text-text-base">
-                  <span className="font-semibold">{app.funcionarioNome}</span> recebeu <span className="font-semibold">{app.tipoVacina}</span>
+                  <span className="font-semibold">{app.funcionario.nome}</span> recebeu <span className="font-semibold text-primary">{app.vacina.nome}</span>
                 </p>
-                <p className="text-xs text-text-muted" title={app.dataAplicacao.toLocaleString('pt-BR')}>
-                  {formatDistanceToNow(app.dataAplicacao, { addSuffix: true, locale: ptBR })}
-                   {` por ${app.responsavel}`} 
+                <p className="text-xs text-text-muted mt-0.5" title={new Date(app.dataAplicacao).toLocaleString('pt-BR')}>
+                  {formatDistanceToNow(new Date(app.dataAplicacao), { addSuffix: true, locale: ptBR })}
+                  {/* Se quiser adicionar o lote: • Lote {app.lote} */}
                 </p>
               </div>
             </li>

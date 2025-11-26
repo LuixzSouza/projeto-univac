@@ -7,13 +7,14 @@ interface StatCardProps {
   value: string | number
   description?: string
   icon?: React.ElementType
-  color?: 'primary' | 'blue' | 'yellow' 
+  variant?: 'default' | 'success' | 'warning' | 'danger'
 }
 
-const colorClasses = {
-  primary: 'bg-primary text-white',
-  blue: 'bg-blue-500 text-white',
-  yellow: 'bg-yellow-500 text-white',
+const variantStyles = {
+  default: { bg: 'bg-primary', text: 'text-primary' },
+  success: { bg: 'bg-green-500', text: 'text-green-600' },
+  warning: { bg: 'bg-yellow-500', text: 'text-yellow-600' },
+  danger:  { bg: 'bg-red-500',    text: 'text-red-600' },
 }
 
 export function StatCard({
@@ -21,33 +22,38 @@ export function StatCard({
   value,
   description,
   icon: Icon,
-  color = 'primary',
+  variant = 'default',
 }: StatCardProps) {
+  const styles = variantStyles[variant];
+
   return (
     <motion.div
-      className="relative overflow-hidden rounded-lg bg-bg-surface p-6 shadow-md"
-      whileHover={{ y: -5, boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)' }}
+      className="relative overflow-hidden rounded-lg bg-bg-surface p-6 shadow-md border border-border"
+      whileHover={{ y: -4, boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)' }}
       transition={{ type: 'spring', stiffness: 300 }}
     >
-      {/* Círculo do Ícone no topo (cores semânticas mantidas) */}
+      {/* Círculo decorativo do Ícone */}
       {Icon && (
-        <div
-          className={`absolute -top-3 -right-3 flex h-16 w-16 items-center justify-center rounded-full ${colorClasses[color]} opacity-20`}
-        >
-          <Icon className="h-8 w-8 text-white" />
+        <div className={`absolute -top-4 -right-4 h-24 w-24 rounded-full ${styles.bg} opacity-10 pointer-events-none flex items-center justify-center`}>
+           {/* O ícone real é renderizado abaixo para melhor controle */}
         </div>
       )}
+      
+      {Icon && (
+          <div className={`absolute top-4 right-4 p-2 rounded-full ${styles.bg} bg-opacity-10 ${styles.text}`}>
+              <Icon size={24} />
+          </div>
+      )}
 
-      {/* Conteúdo do Card */}
       <div className="relative z-10">
-        <h3 className="text-sm font-medium uppercase text-text-muted">
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-text-muted">
           {title}
         </h3>
-        <p className="mt-2 text-4xl font-bold text-text-base">
+        <p className="mt-2 text-3xl font-extrabold text-text-base tracking-tight">
           {value}
         </p>
         {description && (
-          <p className="mt-1 text-sm text-text-base">
+          <p className="mt-1 text-xs text-text-muted font-medium">
             {description}
           </p>
         )}

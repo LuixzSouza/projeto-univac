@@ -43,6 +43,7 @@ export const authOptions: AuthOptions = {
       if (user) {
         token.role = user.role;
         token.nome = user.nome;
+        token.id = user.id; // ✅ ADICIONE ESTA LINHA (Salva o ID no Token)
       }
       return token;
     },
@@ -50,6 +51,7 @@ export const authOptions: AuthOptions = {
       if (session.user) {
         (session.user as any).role = token.role;
         (session.user as any).nome = token.nome;
+        (session.user as any).id = token.id || token.sub; // ✅ ADICIONE ESTA LINHA (Passa do Token para a Sessão)
       }
       return session;
     },
