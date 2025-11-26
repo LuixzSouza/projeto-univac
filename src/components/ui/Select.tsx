@@ -4,11 +4,12 @@ import { AlertCircle } from 'lucide-react'
 
 interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   label: string
-  error?: string // ✨ Suporte a erro
+  error?: string
+  icon?: React.ElementType // ✨ Nova prop
 }
 
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(
-  ({ label, id, children, className, error, ...props }, ref) => {
+  ({ label, id, children, className, error, icon: Icon, ...props }, ref) => {
     return (
       <div className="w-full mb-4">
         <label
@@ -19,6 +20,13 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
         </label>
         
         <div className="relative">
+          {/* Renderiza ícone se existir */}
+          {Icon && (
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+              <Icon className="h-5 w-5 text-text-muted" /> 
+            </div>
+          )}
+
           <select
             ref={ref}
             id={id}
@@ -27,6 +35,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
               bg-bg-base text-text-base
               focus:outline-none focus:ring-2 focus:ring-offset-0
               disabled:cursor-not-allowed disabled:opacity-50
+              ${Icon ? 'pl-10' : 'pl-3'} 
               ${error 
                 ? 'border-red-500 focus:border-red-500 focus:ring-red-200' 
                 : 'border-border focus:border-primary focus:ring-primary/20'
@@ -38,7 +47,6 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             {children}
           </select>
 
-          {/* Ícone de erro absoluto à direita */}
           {error && (
             <div className="pointer-events-none absolute inset-y-0 right-8 flex items-center">
               <AlertCircle className="h-5 w-5 text-red-500" />
@@ -55,5 +63,4 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
     )
   }
 )
-
 Select.displayName = 'Select'

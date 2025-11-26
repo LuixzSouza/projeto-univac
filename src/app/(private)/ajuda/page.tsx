@@ -1,14 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Search, ChevronDown, ExternalLink, 
   HelpCircle, PlayCircle, FileText, AlertCircle, CheckCircle2, 
-  BookOpen, LifeBuoy, Server, Database, Code, Send, Info, MousePointerClick,
-  ShieldCheck,
-  Syringe,
-  Users
+  BookOpen, LifeBuoy, Server, Database, Code, Send, ThumbsUp, ThumbsDown, Video, Loader2, Lock, MousePointerClick,
+  ShieldCheck
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
@@ -17,175 +15,196 @@ import { Select } from '@/components/ui/Select'
 import { Modal } from '@/components/ui/Modal'
 import { toast } from 'sonner'
 
-// --- CONTEÚDO RICO E DETALHADO ---
+// --- CONTEÚDO RICO E DETALHADO (Manual do Usuário) ---
 const FAQ_CATEGORIES = [
   {
-    id: 'visao-geral',
-    title: 'Visão Geral e Dashboard',
+    id: 'primeiros-passos',
+    title: 'Primeiros Passos',
+    icon: PlayCircle,
+    color: 'text-blue-500',
     questions: [
       {
-        question: 'O que é o UniVac?',
+        question: 'Por onde eu começo no sistema?',
+        tags: ['Geral', 'Iniciante'],
+        hasVideo: true,
         answer: (
-          <div className="space-y-2 text-sm">
-            <p>O <strong>UniVac</strong> é o sistema oficial de gestão de imunização da UNIVÁS. Ele centraliza o controle de saúde ocupacional, garantindo que todos os colaboradores estejam com as vacinas em dia.</p>
-            <p>Ele substitui as planilhas manuais por um sistema seguro, integrado e auditável.</p>
+          <div className="space-y-3">
+            <p>Bem-vindo ao UniVac! Para configurar o sistema do zero, siga esta trilha:</p>
+            <div className="space-y-2">
+                <div className="flex gap-3 items-start p-2 rounded-lg bg-bg-base border border-border">
+                    <span className="bg-blue-100 text-blue-700 w-6 h-6 rounded flex items-center justify-center text-xs font-bold shrink-0">1</span>
+                    <div>
+                        <p className="font-semibold text-sm">Cadastro de Vacinas</p>
+                        <p className="text-xs text-text-muted">Defina quais imunizantes a empresa oferece (ex: Gripe, Tétano).</p>
+                    </div>
+                </div>
+                <div className="flex gap-3 items-start p-2 rounded-lg bg-bg-base border border-border">
+                    <span className="bg-blue-100 text-blue-700 w-6 h-6 rounded flex items-center justify-center text-xs font-bold shrink-0">2</span>
+                    <div>
+                        <p className="font-semibold text-sm">Cadastro de Funcionários</p>
+                        <p className="text-xs text-text-muted">Importe ou cadastre sua equipe com CPF e Registro.</p>
+                    </div>
+                </div>
+            </div>
+            <p className="text-xs text-text-muted italic">Após isso, você estará pronto para usar a Agenda.</p>
           </div>
         ),
-        link: null
+        link: '/vacinas'
       },
       {
-        question: 'Entendendo os Gráficos do Painel',
+        question: 'O que significam as cores do Dashboard?',
+        tags: ['Visual', 'Dashboard'],
         answer: (
-          <div className="space-y-3 text-sm">
-            <p>O Dashboard apresenta dados em tempo real:</p>
-            <ul className="list-disc pl-5 space-y-1 text-text-muted">
-              <li><strong>Cobertura Vacinal (Pizza):</strong> Mostra a porcentagem da empresa que já cumpriu o protocolo obrigatório.</li>
-              <li><strong>Catálogo (Rosca):</strong> Proporção entre vacinas obrigatórias (ex: Tétano, Hepatite) e opcionais (ex: Gripe).</li>
-              <li><strong>Tendência (Linha):</strong> Mostra o volume de aplicações realizadas nos últimos dias.</li>
-            </ul>
-            <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-md border border-blue-100 dark:border-blue-800 text-blue-700 dark:text-blue-300 flex gap-2 items-start">
-              <Info size={16} className="mt-0.5 shrink-0"/>
-              <p>Os dados são atualizados a cada nova aplicação registrada.</p>
+          <div className="space-y-2 text-sm">
+            <p>O painel utiliza um sistema de semáforo para facilitar a leitura:</p>
+            <div className="grid gap-2">
+                <div className="flex items-center gap-2 p-2 bg-green-50 border border-green-100 rounded">
+                    <div className="w-3 h-3 rounded-full bg-green-500 shadow-sm"></div> 
+                    <span className="text-green-800 font-medium">Verde: Conformidade</span>
+                    <span className="text-green-700 text-xs">- Funcionário em dia ou processo concluído.</span>
+                </div>
+                <div className="flex items-center gap-2 p-2 bg-yellow-50 border border-yellow-100 rounded">
+                    <div className="w-3 h-3 rounded-full bg-yellow-500 shadow-sm"></div> 
+                    <span className="text-yellow-800 font-medium">Amarelo: Atenção</span>
+                    <span className="text-yellow-700 text-xs">- Prazo próximo ou vacinação parcial.</span>
+                </div>
+                <div className="flex items-center gap-2 p-2 bg-red-50 border border-red-100 rounded">
+                    <div className="w-3 h-3 rounded-full bg-red-500 shadow-sm"></div> 
+                    <span className="text-red-800 font-medium">Vermelho: Crítico</span>
+                    <span className="text-red-700 text-xs">- Atraso, estoque zerado ou erro.</span>
+                </div>
             </div>
           </div>
         ),
         link: '/dashboard'
-      }
-    ]
-  },
-  {
-    id: 'funcionarios',
-    title: 'Gestão de Pessoas',
-    questions: [
-      {
-        question: 'Como cadastrar um novo funcionário?',
-        answer: (
-          <div className="space-y-2 text-sm">
-            <ol className="list-decimal pl-5 space-y-1 font-medium">
-              <li>Acesse o menu <strong>Funcionários</strong>.</li>
-              <li>Clique no botão <strong>"Adicionar Funcionário"</strong> no topo direito.</li>
-              <li>Preencha os dados obrigatórios (Nome, Email, CPF e Registro).</li>
-              <li>Defina uma senha inicial (o funcionário poderá trocar depois).</li>
-            </ol>
-          </div>
-        ),
-        link: '/funcionarios'
-      },
-      {
-        question: 'Por que não consigo excluir um funcionário?',
-        answer: (
-          <div className="space-y-3 text-sm">
-            <p>O sistema possui uma trava de segurança para proteger o histórico médico.</p>
-            <p><strong>Se o funcionário já tomou alguma vacina registrada no sistema, ele não pode ser excluído</strong>, pois isso apagaria o histórico legal da vacinação.</p>
-            <div className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-md border border-yellow-100 dark:border-yellow-800 text-yellow-700 dark:text-yellow-400 flex gap-2 items-start">
-              <AlertCircle size={16} className="mt-0.5 shrink-0"/>
-              <p><strong>Solução:</strong> Em vez de excluir, edite o funcionário e mude o Status para <strong>Inativo</strong>. Assim ele não aparece mais nas listas de agendamento.</p>
-            </div>
-          </div>
-        ),
-        link: '/funcionarios'
-      }
-    ]
-  },
-  {
-    id: 'vacinas',
-    title: 'Vacinas e Obrigatoriedade',
-    questions: [
-      {
-        question: 'Qual a diferença entre Vacina Obrigatória e Opcional?',
-        answer: (
-          <div className="space-y-2 text-sm">
-            <ul className="space-y-2">
-              <li>
-                <span className="font-bold text-primary">Obrigatória:</span> Conta para o cálculo de conformidade. Se o funcionário não tomar, o status dele ficará "Pendente" (Vermelho) no painel.
-              </li>
-              <li>
-                <span className="font-bold text-text-muted">Opcional:</span> Registra no histórico, mas não afeta o status de conformidade do funcionário (ex: Campanhas de Gripe anuais).
-              </li>
-            </ul>
-          </div>
-        ),
-        link: '/vacinas'
-      },
-      {
-        question: 'Como cadastrar um novo tipo de imunizante?',
-        answer: (
-          <p className="text-sm">
-            Vá em <strong>Vacinas</strong> {'>'} <strong>Adicionar Tipo</strong>. Defina o nome e se ela é exigida pela empresa. Uma vez criada, ela aparecerá nas opções de agendamento.
-          </p>
-        ),
-        link: '/vacinas'
       }
     ]
   },
   {
     id: 'operacao',
-    title: 'Agenda e Registro (Dia a Dia)',
+    title: 'Operação Diária (Enfermagem)',
+    icon: CheckCircle2,
+    color: 'text-green-500',
     questions: [
       {
-        question: 'Como funciona o fluxo ideal de vacinação?',
+        question: 'Como realizar o Check-in de vacina?',
+        tags: ['Enfermagem', 'Agenda'],
+        hasVideo: true,
         answer: (
-          <div className="space-y-3 text-sm">
-            <p>O sistema foi desenhado para o seguinte fluxo:</p>
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-2 p-2 bg-bg-base rounded border border-border">
-                <span className="bg-primary text-white w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold">1</span>
-                <span><strong>Agendar:</strong> Marque o dia na Agenda.</span>
-              </div>
-              <div className="flex items-center gap-2 p-2 bg-bg-base rounded border border-border">
-                <span className="bg-primary text-white w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold">2</span>
-                <span><strong>Aplicar:</strong> O funcionário comparece ao local.</span>
-              </div>
-              <div className="flex items-center gap-2 p-2 bg-bg-base rounded border border-border">
-                <span className="bg-primary text-white w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold">3</span>
-                <span><strong>Check-in:</strong> Na agenda, clique no evento e confirme a aplicação.</span>
-              </div>
+          <div className="space-y-2">
+            <p className="text-sm">O <strong>Check-in</strong> é a forma mais rápida de confirmar uma aplicação agendada:</p>
+            <ol className="list-decimal pl-5 space-y-1 text-sm text-text-muted">
+                <li>Acesse a <strong>Agenda</strong>.</li>
+                <li>Clique sobre o agendamento do funcionário (caixa colorida).</li>
+                <li>No modal que abrir, clique no botão verde <strong>"Realizar Check-in"</strong>.</li>
+                <li>Confira o lote e confirme.</li>
+            </ol>
+            <div className="flex items-center gap-2 mt-2 text-xs text-green-700 bg-green-50 p-2 rounded border border-green-100">
+                <CheckCircle2 size={14} />
+                Isso gera o histórico e libera o horário na agenda automaticamente.
             </div>
           </div>
         ),
         link: '/agenda'
       },
       {
-        question: 'Posso registrar uma vacina sem agendar antes?',
+        question: 'Registrar vacina sem agendamento prévio',
+        tags: ['Enfermagem', 'Urgência'],
+        answer: (
+          <p className="text-sm">
+            Sim! Utilize o botão <strong>"Registrar Aplicação"</strong> presente no topo do Dashboard ou na página de Vacinas. 
+            Isso é ideal para campanhas relâmpago ou atendimentos de balcão, pulando a etapa de agendamento.
+          </p>
+        ),
+        link: '/dashboard'
+      }
+    ]
+  },
+  {
+    id: 'gestao',
+    title: 'Gestão e Segurança',
+    icon: Lock,
+    color: 'text-purple-500',
+    questions: [
+      {
+        question: 'Como exportar o relatório de pendências?',
+        tags: ['Admin', 'Relatórios'],
         answer: (
           <div className="space-y-2 text-sm">
-            <p><strong>Sim!</strong> É comum em campanhas "relâmpago" ou atendimentos não previstos.</p>
-            <p>No Dashboard ou na lista de Vacinas, clique no botão <strong>"Registrar Aplicação"</strong>. Preencha os dados e salve. O registro irá direto para o histórico do funcionário, sem passar pela agenda.</p>
+            <p>Para auditorias ou controle em Excel:</p>
+            <ol className="list-decimal pl-5 space-y-1 text-text-muted">
+                <li>Vá ao <strong>Dashboard</strong>.</li>
+                <li>Localize o cartão "Ações Rápidas".</li>
+                <li>Clique em <strong>Exportar Pendências</strong>.</li>
+            </ol>
+            <p className="text-xs text-text-muted mt-1">O sistema gerará um arquivo <code>.csv</code> contendo Nome, Registro e quais vacinas obrigatórias estão faltando para cada colaborador.</p>
           </div>
         ),
         link: '/dashboard'
       },
       {
-        question: 'O funcionário faltou. O que eu faço?',
+        question: 'Não consigo excluir um funcionário, por quê?',
+        tags: ['Admin', 'Erro'],
         answer: (
-          <p className="text-sm">
-            Vá na agenda, clique no agendamento e arraste-o para uma nova data (ou edite a data manualmente). O status continuará como "Agendado" até que ele compareça.
-          </p>
+          <div className="space-y-2">
+              <p className="text-sm text-red-600 font-medium flex items-center gap-2">
+                  <AlertCircle size={16}/> Trava de Segurança Ativa
+              </p>
+              <p className="text-sm">
+                  O sistema impede a exclusão de funcionários que possuem <strong>histórico de vacinação</strong>. Isso é uma exigência legal para manter o prontuário médico íntegro.
+              </p>
+              <p className="text-sm bg-bg-base p-2 rounded border border-border">
+                  <strong>Solução:</strong> Em vez de excluir, edite o funcionário e mude o status para <strong>Inativo</strong>.
+              </p>
+          </div>
         ),
-        link: '/agenda'
+        link: '/funcionarios'
       }
     ]
   }
 ]
 
+const FILTERS = ['Todos', 'Geral', 'Admin', 'Enfermagem', 'Erro'];
+
 export default function AjudaPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [expandedKey, setExpandedKey] = useState<string | null>(null)
+  const [activeFilter, setActiveFilter] = useState('Todos')
+  const [isSearching, setIsSearching] = useState(false) // Estado de loading da busca
   
-  // Estados dos Modais
+  // Modais
   const [isDocOpen, setIsDocOpen] = useState(false)
   const [isSupportOpen, setIsSupportOpen] = useState(false)
+  const [isVideoOpen, setIsVideoOpen] = useState(false)
+  const [videoTitle, setVideoTitle] = useState('')
   
   const router = useRouter()
 
   const toggleExpand = (key: string) => setExpandedKey(expandedKey === key ? null : key)
 
-  // Filtro de Busca
-  const hasSearch = searchTerm.length > 0;
-  const filteredQuestions = hasSearch 
-    ? FAQ_CATEGORIES.flatMap(cat => cat.questions.map((q, idx) => ({ ...q, category: cat.title, key: `${cat.id}-${idx}` })))
-        .filter(q => q.question.toLowerCase().includes(searchTerm.toLowerCase()) || q.answer.toString().toLowerCase().includes(searchTerm.toLowerCase()))
-    : [];
+  // Simula delay de busca para dar feedback visual
+  useEffect(() => {
+    setIsSearching(true)
+    const timer = setTimeout(() => {
+        setIsSearching(false)
+    }, 500) // 500ms de "loading" fake ao digitar ou filtrar
+    return () => clearTimeout(timer)
+  }, [searchTerm, activeFilter])
+
+  // Lógica de Filtro
+  const filteredQuestions = FAQ_CATEGORIES.flatMap(cat => 
+    cat.questions.map((q, idx) => ({ ...q, category: cat.title, icon: cat.icon, color: cat.color, key: `${cat.id}-${idx}` }))
+  ).filter(q => {
+    const matchesSearch = q.question.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          (typeof q.answer === 'string' && q.answer.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesFilter = activeFilter === 'Todos' || q.tags.includes(activeFilter);
+    return matchesSearch && matchesFilter;
+  });
+
+  const handleOpenVideo = (title: string) => {
+      setVideoTitle(title);
+      setIsVideoOpen(true);
+  }
 
   const containerVariants = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.1 } } }
   const itemVariants = { hidden: { y: 10, opacity: 0 }, visible: { y: 0, opacity: 1 } }
@@ -195,7 +214,7 @@ export default function AjudaPage() {
       variants={containerVariants} 
       initial="hidden" 
       animate="visible" 
-      className="max-w-5xl mx-auto space-y-10 pb-10"
+      className="max-w-5xl mx-auto space-y-8 pb-10"
     >
       
       {/* --- CABEÇALHO --- */}
@@ -204,75 +223,88 @@ export default function AjudaPage() {
 
         <motion.div variants={itemVariants}>
             <h1 className="text-4xl font-extrabold text-text-base tracking-tight">
-              Central de Ajuda <span className="text-primary">UniVac</span>
+              Central de Conhecimento
             </h1>
             <p className="text-text-muted mt-3 text-lg max-w-xl mx-auto">
-              Tutoriais, guias e suporte técnico para a equipe de saúde da UNIVÁS.
+              Base de conhecimento inteligente do UniVac. Pesquise processos, regras e tutoriais.
             </p>
         </motion.div>
         
-        <motion.div variants={itemVariants} className="relative max-w-xl mx-auto">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <Search className="text-primary" size={20} />
+        <motion.div variants={itemVariants} className="relative max-w-xl mx-auto space-y-6">
+            <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    {isSearching ? <Loader2 className="text-primary animate-spin" size={20} /> : <Search className="text-primary" size={20} />}
+                </div>
+                <input
+                    type="text"
+                    placeholder="Qual a sua dúvida hoje?"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full rounded-full border border-border bg-bg-surface py-4 pl-12 pr-4 text-base shadow-lg shadow-primary/5 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all"
+                />
             </div>
-            <input
-                type="text"
-                placeholder="Digite sua dúvida... (Ex: Como excluir?)"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full rounded-full border border-border bg-bg-surface py-4 pl-12 pr-4 text-base shadow-lg shadow-primary/5 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all"
-            />
+            
+            {/* Chips de Filtro */}
+            <div className="flex justify-center gap-2 flex-wrap">
+                {FILTERS.map(f => (
+                    <button
+                        key={f}
+                        onClick={() => setActiveFilter(f)}
+                        disabled={isSearching}
+                        className={`px-4 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                            activeFilter === f 
+                            ? 'bg-primary text-white border-primary shadow-md transform scale-105' 
+                            : 'bg-bg-surface text-text-muted border-border hover:border-primary/50 hover:text-primary'
+                        }`}
+                    >
+                        {f}
+                    </button>
+                ))}
+            </div>
         </motion.div>
       </div>
 
       {/* --- CONTEÚDO PRINCIPAL --- */}
       <div className="grid gap-8 md:grid-cols-12">
         
-        {/* FAQ */}
-        <div className="md:col-span-8 space-y-8">
-            {hasSearch ? (
+        {/* Coluna Esquerda: FAQ Dinâmico */}
+        <div className="md:col-span-8 space-y-6 min-h-[400px]">
+            {isSearching ? (
+                /* Skeleton Loading State */
                 <div className="space-y-4">
-                    <h2 className="text-lg font-semibold text-text-base">Resultados da busca:</h2>
-                    {filteredQuestions.length > 0 ? (
-                        filteredQuestions.map((q) => (
-                            <QuestionItem key={q.key} item={q} isOpen={expandedKey === q.key} onToggle={() => toggleExpand(q.key)} router={router} />
-                        ))
-                    ) : (
-                        <div className="text-center py-12 bg-bg-surface rounded-xl border border-border border-dashed">
-                            <p className="text-text-muted">Não encontramos nada para "{searchTerm}".</p>
-                            <button onClick={() => setSearchTerm('')} className="text-primary hover:underline mt-2 font-medium">Limpar busca</button>
-                        </div>
-                    )}
+                    {[1,2,3].map(i => (
+                        <div key={i} className="h-20 w-full bg-bg-surface rounded-lg border border-border animate-pulse" />
+                    ))}
+                </div>
+            ) : filteredQuestions.length > 0 ? (
+                <div className="space-y-4">
+                    {filteredQuestions.map((q) => (
+                        <QuestionItem 
+                            key={q.key} 
+                            item={q} 
+                            isOpen={expandedKey === q.key} 
+                            onToggle={() => toggleExpand(q.key)} 
+                            router={router} 
+                            onOpenVideo={() => handleOpenVideo(q.question)}
+                        />
+                    ))}
                 </div>
             ) : (
-                FAQ_CATEGORIES.map((category) => (
-                    <motion.div key={category.id} variants={itemVariants}>
-                        <h2 className="mb-4 text-lg font-bold text-text-base flex items-center gap-2 border-b border-border pb-2">
-                            {category.id === 'primeiros-passos' && <PlayCircle size={20} className="text-blue-500"/>}
-                            {category.id === 'tarefas' && <MousePointerClick size={20} className="text-green-500"/>}
-                            {category.id === 'funcionarios' && <Users size={20} className="text-purple-500"/>}
-                            {category.id === 'vacinas' && <Syringe size={20} className="text-orange-500"/>}
-                            {category.id === 'operacao' && <CheckCircle2 size={20} className="text-primary"/>}
-                            {category.title}
-                        </h2>
-                        <div className="space-y-3">
-                            {category.questions.map((q, idx) => (
-                                <QuestionItem key={`${category.id}-${idx}`} item={q} isOpen={expandedKey === `${category.id}-${idx}`} onToggle={() => toggleExpand(`${category.id}-${idx}`)} router={router} />
-                            ))}
-                        </div>
-                    </motion.div>
-                ))
+                <div className="text-center py-12 bg-bg-surface rounded-xl border border-border border-dashed">
+                    <p className="text-text-muted">Nenhum resultado para o filtro atual.</p>
+                    <button onClick={() => {setSearchTerm(''); setActiveFilter('Todos')}} className="text-primary hover:underline mt-2 font-medium">Limpar busca</button>
+                </div>
             )}
         </div>
 
-        {/* Barra Lateral */}
+        {/* Coluna Direita: Ações Rápidas (Mantidas e Melhoradas) */}
         <div className="md:col-span-4 space-y-4">
             <motion.button 
                 variants={itemVariants}
                 onClick={() => setIsDocOpen(true)}
-                className="w-full text-left group relative overflow-hidden rounded-xl bg-bg-surface p-6 border border-border hover:border-primary/50 transition-all shadow-sm hover:shadow-md"
+                className="w-full text-left group relative overflow-hidden rounded-xl bg-bg-surface p-6 border border-border hover:border-blue-500/50 transition-all shadow-sm hover:shadow-md"
             >
-                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity text-blue-500">
                     <BookOpen size={64} />
                 </div>
                 <div className="relative z-10">
@@ -280,7 +312,7 @@ export default function AjudaPage() {
                         <Code size={20} />
                     </div>
                     <h3 className="font-bold text-text-base">Documentação Técnica</h3>
-                    <p className="text-sm text-text-muted mt-1">Detalhes de API e Banco de Dados.</p>
+                    <p className="text-sm text-text-muted mt-1">Arquitetura, API e Banco de Dados.</p>
                 </div>
             </motion.button>
 
@@ -289,7 +321,7 @@ export default function AjudaPage() {
                 onClick={() => setIsSupportOpen(true)}
                 className="w-full text-left group relative overflow-hidden rounded-xl bg-bg-surface p-6 border border-border hover:border-primary/50 transition-all shadow-sm hover:shadow-md"
             >
-                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity text-primary">
                     <LifeBuoy size={64} />
                 </div>
                 <div className="relative z-10">
@@ -303,21 +335,37 @@ export default function AjudaPage() {
         </div>
       </div>
 
-      {/* --- MODAIS (Mantenha os mesmos do passo anterior) --- */}
+      {/* --- MODAIS (Mantidos) --- */}
       <Modal isOpen={isDocOpen} onClose={() => setIsDocOpen(false)} title="Ficha Técnica do Sistema">
          <div className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
-                <TechItem icon={Code} label="Frontend" value="Next.js 14 (App Router)" />
-                <TechItem icon={Database} label="Banco de Dados" value="PostgreSQL (Neon DB)" />
+                <TechItem icon={Code} label="Frontend" value="Next.js 14" />
+                <TechItem icon={Database} label="Database" value="Neon Postgres" />
                 <TechItem icon={Server} label="ORM" value="Prisma" />
-                <TechItem icon={ShieldCheck} label="Auth" value="NextAuth v5" />
+                <TechItem icon={ShieldCheck} label="Security" value="NextAuth v5" />
             </div>
             <div className="flex justify-end"><Button onClick={() => setIsDocOpen(false)}>Fechar</Button></div>
          </div>
       </Modal>
 
-      <Modal isOpen={isSupportOpen} onClose={() => setIsSupportOpen(false)} title="Abrir Chamado - TI UNIVÁS">
+      <Modal isOpen={isSupportOpen} onClose={() => setIsSupportOpen(false)} title="Abrir Chamado">
          <SupportForm onClose={() => setIsSupportOpen(false)} />
+      </Modal>
+
+      {/* MODAL VÍDEO */}
+      <Modal isOpen={isVideoOpen} onClose={() => setIsVideoOpen(false)} title={`Tutorial: ${videoTitle}`}>
+         <div className="space-y-4">
+             <div className="aspect-video w-full bg-black rounded-lg flex items-center justify-center relative overflow-hidden group cursor-pointer shadow-lg border border-gray-800">
+                 <div className="absolute inset-0 bg-[url('/univas-si.png')] bg-cover bg-center opacity-40 group-hover:opacity-30 transition-opacity"></div>
+                 <div className="relative z-10 h-20 w-20 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center border-2 border-white/50 group-hover:scale-110 transition-transform">
+                    <PlayCircle size={48} className="text-white fill-white" />
+                 </div>
+                 <p className="absolute bottom-4 left-4 text-white text-sm font-medium bg-black/50 px-2 py-1 rounded">Simulação de Player • 02:34</p>
+             </div>
+             <div className="flex justify-end">
+                <Button variant="secondary" onClick={() => setIsVideoOpen(false)}>Fechar Player</Button>
+             </div>
+         </div>
       </Modal>
 
     </motion.div>
@@ -326,34 +374,63 @@ export default function AjudaPage() {
 
 // --- SUB-COMPONENTES ---
 
-function QuestionItem({ item, isOpen, onToggle, router }: any) {
+function QuestionItem({ item, isOpen, onToggle, router, onOpenVideo }: any) {
+    const [feedback, setFeedback] = useState<null | 'up' | 'down'>(null);
+
     return (
-        <div className={`overflow-hidden rounded-lg border bg-bg-surface transition-all duration-200 ${isOpen ? 'border-primary/40 shadow-sm' : 'border-border hover:border-primary/20'}`}>
+        <motion.div 
+            layout 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }}
+            className={`overflow-hidden rounded-lg border bg-bg-surface transition-all duration-300 ${isOpen ? 'border-primary/40 shadow-md ring-1 ring-primary/5' : 'border-border hover:border-primary/30'}`}
+        >
             <button onClick={onToggle} className="flex w-full items-center justify-between p-4 text-left focus:outline-none group">
-                <span className="font-medium text-text-base pr-4 group-hover:text-primary transition-colors">{item.question}</span>
-                <ChevronDown className={`h-5 w-5 text-text-muted transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+                <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-md bg-bg-base text-muted-foreground group-hover:text-primary transition-colors`}>
+                        <item.icon size={18} className={item.color}/>
+                    </div>
+                    <span className="font-medium text-text-base group-hover:text-primary transition-colors">{item.question}</span>
+                </div>
+                <ChevronDown className={`h-5 w-5 text-text-muted transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
             </button>
             <AnimatePresence>
                 {isOpen && (
                     <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}>
-                        <div className="px-4 pb-4 text-text-muted leading-relaxed border-t border-border/50 pt-3 text-sm">
+                        <div className="px-4 pb-4 text-text-muted leading-relaxed border-t border-border/50 pt-3 text-sm ml-[52px]">
                             {item.answer}
-                            {item.link && (
-                                <div className="mt-3 pt-2">
-                                    <Button size="sm" variant="secondary" onClick={() => router.push(item.link)} className="text-primary hover:text-primary-dark h-8 text-xs">
-                                        Ir para funcionalidade <ExternalLink size={12} className="ml-2" />
+                            
+                            <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-border/30">
+                                {item.link && (
+                                    <Button size="sm" variant="secondary" onClick={() => router.push(item.link)} className="text-primary hover:text-primary-dark h-8 text-xs bg-primary/5 hover:bg-primary/10 border-primary/10">
+                                        Acessar Funcionalidade <ExternalLink size={12} className="ml-2" />
                                     </Button>
+                                )}
+                                {item.hasVideo && (
+                                    <Button size="sm" variant="secondary" onClick={onOpenVideo} className="text-blue-600 bg-blue-50 hover:bg-blue-100 h-8 text-xs border-blue-100 hover:border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800">
+                                        <Video size={12} className="mr-2" /> Assistir Tutorial
+                                    </Button>
+                                )}
+                            </div>
+
+                            {/* Feedback Loop */}
+                            <div className="mt-4 flex items-center gap-4 text-xs text-text-muted/70 bg-bg-base/50 p-2 rounded w-fit">
+                                <span>Isso foi útil?</span>
+                                <div className="flex gap-1">
+                                    <button onClick={() => { setFeedback('up'); toast.success("Obrigado pelo feedback!") }} className={`p-1 rounded hover:bg-green-100 hover:text-green-600 transition-colors ${feedback === 'up' ? 'text-green-600 bg-green-50' : ''}`}><ThumbsUp size={14}/></button>
+                                    <button onClick={() => { setFeedback('down'); toast.info("Vamos melhorar esse conteúdo.") }} className={`p-1 rounded hover:bg-red-100 hover:text-red-600 transition-colors ${feedback === 'down' ? 'text-red-600 bg-red-50' : ''}`}><ThumbsDown size={14}/></button>
                                 </div>
-                            )}
+                            </div>
                         </div>
                     </motion.div>
                 )}
             </AnimatePresence>
-        </div>
+        </motion.div>
     )
 }
 
-function TechItem({ icon: Icon, label, value }: any) {
+// ... (Mantenha TechItem e SupportForm iguais ao anterior, eles estão ótimos)
+function TechItem({ icon: Icon, label, value }: any) { 
     return (
         <div className="flex items-center gap-3 p-3 rounded-lg bg-bg-base border border-border">
             <div className="p-2 bg-bg-surface rounded-md text-primary"><Icon size={18} /></div>
@@ -365,7 +442,7 @@ function TechItem({ icon: Icon, label, value }: any) {
     )
 }
 
-function SupportForm({ onClose }: { onClose: () => void }) {
+function SupportForm({ onClose }: { onClose: () => void }) { 
     const [loading, setLoading] = useState(false)
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()

@@ -1,11 +1,12 @@
 'use client'
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
+import Link from 'next/link' // ✨ CORREÇÃO: Importamos o Link
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import { ConfirmationModal } from '@/components/ui/ConfirmationModal'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Syringe, Plus, CheckSquare, History, Filter as FilterIcon, Search, X } from 'lucide-react'
+import { Syringe, Plus, CheckSquare, History, Filter as FilterIcon, Search, X, Package } from 'lucide-react'
 
 import VacinaTable from '@/components/features/vacinas/VacinaTable'
 import { VacinaForm } from '@/components/features/vacinas/VacinaForm'
@@ -54,7 +55,6 @@ export default function VacinasPage() {
   // Dados
   const [tiposVacinas, setTiposVacinas] = useState<IVacina[]>([])
   const [funcionarios, setFuncionarios] = useState<IFuncionarioSimples[]>([])
-  // Estado para o histórico (poderia vir de uma API /api/aplicacoes)
   const [aplicacoes, setAplicacoes] = useState<IAplicacaoHist[]>([]) 
 
   // --- BUSCAR DADOS REAIS (GET) ---
@@ -64,27 +64,25 @@ export default function VacinasPage() {
       const [resVacinas, resFunc, resApps] = await Promise.all([
         fetch('/api/vacinas'),
         fetch('/api/funcionarios'),
-        fetch('/api/dashboard') // Usando dashboard para pegar histórico recente por enquanto
+        fetch('/api/dashboard') // Usamos dashboard para pegar histórico recente por enquanto
       ])
 
       if (resVacinas.ok) setTiposVacinas(await resVacinas.json())
       if (resFunc.ok) setFuncionarios(await resFunc.json())
       
-      // Se você criar uma rota /api/aplicacoes (GET), use-a aqui. 
-      // Por enquanto, pegamos do dashboard ou iniciamos vazio.
       if (resApps.ok) {
-         const dashData = await resApps.json()
-         // Mapeia o retorno do dashboard para a tabela de histórico
-         const appsFormatadas = dashData.aplicacoes.map((app: any) => ({
-            id: app.id,
-            funcionarioNome: app.funcionario.nome,
-            tipoVacina: app.vacina.nome,
-            dataAplicacao: app.dataAplicacao,
-            lote: app.lote,
-            responsavel: 'Sistema'
-         }))
-         setAplicacoes(appsFormatadas)
-      }
+           const dashData = await resApps.json()
+           // Mapeia o retorno do dashboard para a tabela de histórico
+           const appsFormatadas = dashData.aplicacoes.map((app: any) => ({
+              id: app.id,
+              funcionarioNome: app.funcionario.nome,
+              tipoVacina: app.vacina.nome,
+              dataAplicacao: app.dataAplicacao,
+              lote: app.lote,
+              responsavel: 'Sistema'
+           }))
+           setAplicacoes(appsFormatadas)
+       }
 
     } catch (error) {
       console.error("Erro de conexão", error)
@@ -135,11 +133,6 @@ export default function VacinasPage() {
   const handleOpenEditTipoModal = (vacina: IVacina) => { setTipoVacinaEmEdicao(vacina); setIsTipoFormModalOpen(true); };
   const handleCloseTipoFormModal = () => { setIsTipoFormModalOpen(false); setTimeout(() => setTipoVacinaEmEdicao(null), 300); };
   
-  const handleFiltroHistoricoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFiltroHistorico(e.target.value);
-    setCurrentPageHistorico(1); // Volta para a página 1 ao filtrar
-  }
-
   const handleSuccessForm = async () => {
      await fetchData(); // Recarrega tudo
   }
@@ -147,7 +140,6 @@ export default function VacinasPage() {
   const handleOpenDeleteTipoModal = (vacina: IVacina) => { setTipoVacinaParaExcluir(vacina); setIsTipoDeleteModalOpen(true); };
   const handleCloseDeleteTipoModal = () => { setIsTipoDeleteModalOpen(false); setTimeout(() => setTipoVacinaParaExcluir(null), 300); };
   
-  // --- DELETE REAL ---
   const handleConfirmDeleteTipo = async () => {
     if (!tipoVacinaParaExcluir || !tipoVacinaParaExcluir.id) return;
 
@@ -163,7 +155,6 @@ export default function VacinasPage() {
     }
   };
 
-  // Callback quando uma aplicação é registrada
   const handleRegisterSuccess = async () => {
       await fetchData(); // Atualiza o histórico
       setIsRegistroModalOpen(false);
@@ -200,27 +191,27 @@ export default function VacinasPage() {
 
       <div className="border-b border-border">
         <nav className="-mb-px flex space-x-6" aria-label="Tabs">
-          {/* Aba Vacinas */}
+          {/* Aba Tipos de Vacina */}
           <button 
             onClick={() => setActiveTab('tipos')} 
             className={`flex items-center gap-2 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors cursor-pointer ${ 
               activeTab === 'tipos' ? 'border-primary text-primary' : 'border-transparent text-text-muted hover:text-text-base hover:border-border' 
             }`} 
           >
-            <Syringe size={16} /> Tipos de Vacina
+            <Syringe size={16} /> <span className="hidden sm:inline">Tipos de Vacina</span> <span className="sm:hidden">Vacinas</span>
             <span className={`ml-1 rounded-full px-2 py-0.5 text-xs font-medium ${
               activeTab === 'tipos' ? 'bg-primary/10 text-primary' : 'bg-border text-text-muted'
             }`}> {tiposVacinas.length} </span>
           </button>
 
-          {/* Aba Histórico */}
+          {/* Aba Histórico de Aplicações */}
           <button 
             onClick={() => setActiveTab('historico')} 
             className={`flex items-center gap-2 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors cursor-pointer ${ 
               activeTab === 'historico' ? 'border-primary text-primary' : 'border-transparent text-text-muted hover:text-text-base hover:border-border' 
             }`} 
           >
-            <History size={16} /> Histórico de Aplicações
+            <History size={16} /> <span className="hidden sm:inline">Histórico de Aplicações</span> <span className="sm:hidden">Histórico</span>
             <span className={`ml-1 rounded-full px-2 py-0.5 text-xs font-medium ${
               activeTab === 'historico' ? 'bg-primary/10 text-primary' : 'bg-border text-text-muted'
             }`}> {aplicacoes.length} </span>
@@ -235,34 +226,41 @@ export default function VacinasPage() {
           {activeTab === 'tipos' && (
             <motion.div key="tipos" variants={tabContentVariants} initial="hidden" animate="visible" exit="exit" className="space-y-4">
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                  <div className='relative flex-grow md:max-w-xs'>
-                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"> <Search size={16} className='text-text-muted'/> </div>
-                    <input 
-                      type="text" 
-                      placeholder="Filtrar tipos..." 
-                      value={filtroTipos} 
-                      onChange={(e) => { setFiltroTipos(e.target.value); setCurrentPageTipos(1); }} 
-                      className="w-full rounded border border-border bg-bg-base py-2 pl-9 pr-3 text-sm text-text-base placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50"
-                    />
-                  </div>
+                
+                {/* Search Bar */}
+                <div className='relative flex-grow md:max-w-xs'>
+                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"> <Search size={16} className='text-text-muted'/> </div>
+                  <input 
+                    type="text" 
+                    placeholder="Filtrar tipos..." 
+                    value={filtroTipos} 
+                    onChange={(e) => { setFiltroTipos(e.target.value); setCurrentPageTipos(1); }} 
+                    className="w-full rounded border border-border bg-bg-base py-2 pl-9 pr-3 text-sm text-text-base placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  />
+                </div>
+                
+                <div className="flex items-center gap-4">
+                  {/* Botão de Limpar Filtro */}
+                  {filtroTipos && (
+                    <Button 
+                      variant="ghost" 
+                      onClick={() => setFiltroTipos('')}
+                      className="h-8 px-2 text-xs text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 border-transparent shadow-none bg-transparent"
+                    >
+                      <X size={14} className="mr-1" /> Limpar Filtro
+                    </Button>
+                  )}
                   
-                  <div className="flex items-center gap-4">
-                    {/* SEU BOTÃO "GHOST" CORRIGIDO AQUI */}
-                    {filtroTipos && (
-                        <Button 
-                            variant="ghost" // Certifique-se de ter adicionado 'ghost' no Button.tsx, ou use 'secondary'
-                            onClick={() => setFiltroTipos('')}
-                            className="h-8 px-2 text-xs text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 border-transparent shadow-none bg-transparent"
-                        >
-                            <X size={14} className="mr-1" /> Limpar Filtro
-                        </Button>
-                    )}
-                    
-                    <p className="flex-shrink-0 text-sm text-text-muted">
-                        {tiposVacinasFiltrados.length} {tiposVacinasFiltrados.length === 1 ? 'tipo encontrado' : 'tipos encontrados'}
-                    </p>
-                  </div>
+                  <p className="flex-shrink-0 text-sm text-text-muted">
+                    {tiposVacinasFiltrados.length} {tiposVacinasFiltrados.length === 1 ? 'tipo encontrado' : 'tipos encontrados'}
+                  </p>
+                </div>
               </div>
+
+              {/* ✨ NOVIDADE: Card de Detalhe quando apenas 1 resultado */}
+              {filtroTipos && tiposVacinasFiltrados.length === 1 && (
+                  <VacinaDetailCard vacina={tiposVacinasFiltrados[0]} />
+              )}
 
               {tiposVacinasFiltrados.length > 0 ? (
                 <>
@@ -298,7 +296,7 @@ export default function VacinasPage() {
                       type="text" 
                       placeholder="Filtrar histórico..." 
                       value={filtroHistorico} 
-                      onChange={handleFiltroHistoricoChange} 
+                      onChange={(e) => { setFiltroHistorico(e.target.value); setCurrentPageHistorico(1); }} 
                       className="w-full rounded border border-border bg-bg-base py-2 pl-9 pr-3 text-sm text-text-base placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50"
                     />
                   </div>
@@ -330,41 +328,57 @@ export default function VacinasPage() {
 
       {/* --- Modais --- */}
       <AnimatePresence>
-        {isTipoFormModalOpen && (
-            <Modal isOpen={isTipoFormModalOpen} onClose={handleCloseTipoFormModal} title={tipoVacinaEmEdicao ? 'Editar Tipo de Vacina' : 'Novo Tipo'}> 
-                <VacinaForm 
-                    onClose={handleCloseTipoFormModal} 
-                    vacinaParaEditar={tipoVacinaEmEdicao}
-                    onSuccess={handleSuccessForm}
-                /> 
-            </Modal>
-        )}
-      </AnimatePresence>
-      
-      <AnimatePresence>
-        {isTipoDeleteModalOpen && (
-            <ConfirmationModal 
-                isOpen={isTipoDeleteModalOpen} 
-                onClose={handleCloseDeleteTipoModal} 
-                onConfirm={handleConfirmDeleteTipo} 
-                title="Excluir Tipo" 
-                message={`Tem a certeza que deseja excluir "${tipoVacinaParaExcluir?.nome}"?`}
-            />
-        )}
-      </AnimatePresence>
-      
-      <AnimatePresence>
-        {isRegistroModalOpen && (
-            <Modal isOpen={isRegistroModalOpen} onClose={() => setIsRegistroModalOpen(false)} title="Registrar Aplicação de Vacina"> 
-                <RegistroAplicacaoForm 
-                    funcionarios={funcionarios} 
-                    vacinas={tiposVacinas} // Usa as vacinas reais do banco
-                    onRegister={handleRegisterSuccess}
-                /> 
-            </Modal>
+        {/* Modal de Adicionar/Editar Tipo de Vacina */}
+        {isTipoFormModalOpen && ( <Modal isOpen={isTipoFormModalOpen} onClose={handleCloseTipoFormModal} title={tipoVacinaEmEdicao ? 'Editar Tipo de Vacina' : 'Novo Tipo'}> <VacinaForm onClose={handleCloseTipoFormModal} vacinaParaEditar={tipoVacinaEmEdicao} onSuccess={handleSuccessForm} /> </Modal> )}
+
+        {/* Modal de Confirmação de Exclusão */}
+        {isTipoDeleteModalOpen && ( <ConfirmationModal isOpen={isTipoDeleteModalOpen} onClose={handleCloseDeleteTipoModal} onConfirm={handleConfirmDeleteTipo} title="Excluir Tipo" message={`Tem a certeza que deseja excluir "${tipoVacinaParaExcluir?.nome}"?`} /> )}
+
+        {/* Modal de Registro de Aplicação */}
+        {isRegistroModalOpen && ( 
+          <Modal isOpen={isRegistroModalOpen} onClose={() => setIsRegistroModalOpen(false)} title="Registrar Aplicação de Vacina"> 
+              <RegistroAplicacaoForm funcionarios={funcionarios} vacinas={tiposVacinas} onRegister={handleRegisterSuccess} /> 
+          </Modal>
         )}
       </AnimatePresence>
 
     </motion.div>
   )
+}
+
+// --- NOVO SUB-COMPONENTE: Card de Detalhes (Quando apenas 1 item é filtrado) ---
+interface VacinaDetailCardProps {
+    vacina: IVacina;
+}
+function VacinaDetailCard({ vacina }: VacinaDetailCardProps) {
+    return (
+        <motion.div 
+            initial={{ opacity: 0, y: -10 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            className="mb-4 rounded-lg border-2 border-primary/50 bg-bg-base p-4 shadow-md flex justify-between items-center"
+        >
+            <div className="flex items-center gap-4">
+                <div className="h-12 w-12 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                    <Syringe size={24} />
+                </div>
+                <div>
+                    <h3 className="text-lg font-bold text-text-base">
+                        {vacina.nome}
+                        <span className={`ml-3 px-2 py-0.5 rounded-full text-xs font-semibold border ${vacina.obrigatoriedade ? 'bg-red-100 text-red-700 border-red-200' : 'bg-green-100 text-green-700 border-green-200'}`}>
+                            {vacina.obrigatoriedade ? 'Obrigatória' : 'Opcional'}
+                        </span>
+                    </h3>
+                    <p className="text-sm text-text-muted mt-1">{vacina.descricao}</p>
+                </div>
+            </div>
+            
+            {/* Link Rápido para a Gestão de Estoque */}
+            <Link href="/estoque" title="Ver Lotes e Validade">
+                <Button variant="secondary" size="sm" className="flex items-center gap-2">
+                    <Package size={18} className="text-text-muted"/> 
+                    Estoque
+                </Button>
+            </Link>
+        </motion.div>
+    );
 }

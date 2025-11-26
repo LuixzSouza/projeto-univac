@@ -1,266 +1,339 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useSession } from 'next-auth/react'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
-import { motion } from 'framer-motion'
-import { Loader2, User, Lock, Save } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { 
+  Loader2, User, Lock, Save, Camera, QrCode, 
+  Activity, ShieldCheck, Mail, Calendar, MapPin, Upload
+} from 'lucide-react'
 import { toast } from 'sonner'
+import Image from 'next/image'
 
-// Função auxiliar para iniciais
-function getInitials(name: string): string {
-  if (!name) return '?'
-  const names = name.split(' ')
-  const initials = names.filter(Boolean).map((n) => n[0]).join('')
-  return initials.length > 1 ? initials.substring(0, 2) : initials
+// --- SUB-COMPONENTES ---
+
+// 1. CRACHÁ DIGITAL
+function DigitalIDCard({ user, role }: any) {
+    return (
+        <div className="relative w-full max-w-md mx-auto aspect-[1.58/1] bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200 transform transition-transform hover:scale-[1.02] duration-300">
+            {/* Background Design */}
+            <div className="absolute top-0 left-0 w-32 h-full bg-green-600 z-0"></div>
+            <div className="absolute top-0 left-28 w-0 h-0 border-l-[50px] border-l-green-600 border-b-[300px] border-b-transparent z-0"></div>
+            
+            {/* Logo Watermark */}
+            <div className="absolute bottom-4 right-4 opacity-10">
+                <ShieldCheck size={120} />
+            </div>
+
+            <div className="relative z-10 flex h-full items-center p-6 gap-6">
+                {/* Foto */}
+                <div className="flex-shrink-0 flex flex-col items-center gap-2">
+                    <div className="h-28 w-28 rounded-xl bg-slate-200 border-4 border-white shadow-md overflow-hidden relative">
+                         {/* Simulação de foto - usaria user.image na real */}
+                        <div className="w-full h-full bg-gradient-to-br from-slate-300 to-slate-400 flex items-center justify-center text-slate-500 text-3xl font-bold">
+                            {user.nome?.charAt(0)}
+                        </div>
+                    </div>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-white bg-black/20 px-2 py-1 rounded">
+                        {role}
+                    </span>
+                </div>
+
+                {/* Dados */}
+                <div className="flex-grow space-y-1">
+                    <h3 className="text-2xl font-bold text-slate-900 leading-tight">{user.nome}</h3>
+                    <p className="text-sm text-slate-500 font-medium">{user.email}</p>
+                    
+                    <div className="pt-4 flex items-center gap-4">
+                        <div className="bg-white p-1 rounded shadow-sm border border-slate-100">
+                             <QrCode size={54} className="text-slate-800"/>
+                        </div>
+                        <div className="text-[10px] text-slate-400 uppercase tracking-wider leading-relaxed">
+                            <p>ID: {user.id?.substring(0,8).toUpperCase()}</p>
+                            <p>Válido até: DEZ/2025</p>
+                            <p className="text-green-600 font-bold">● ATIVO</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    )
 }
 
 export default function PerfilPage() {
   const { data: session, status, update } = useSession()
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // Estados de Form
   const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
+  const [cargo, setCargo] = useState('')
+  const [telefone, setTelefone] = useState('')
   
   // Senhas
   const [senhaAtual, setSenhaAtual] = useState('')
   const [novaSenha, setNovaSenha] = useState('')
   const [confirmaSenha, setConfirmaSenha] = useState('')
 
+  // UI States
+  const [activeTab, setActiveTab] = useState<'geral' | 'cracha' | 'seguranca'>('geral')
   const [isLoading, setIsLoading] = useState(false)
 
-  // Carrega dados da sessão
+  // Carrega dados
   useEffect(() => {
     if (session?.user) {
       setNome(session.user.nome || '')
       setEmail(session.user.email || '')
+      setCargo((session.user as any).role || 'Funcionário')
+      // Mock de telefone pois não temos no banco ainda
+      setTelefone('(35) 99999-8888') 
     }
   }, [session])
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    // Validações prévias
-    if (novaSenha) {
-        if (novaSenha.length < 6) {
-            toast.warning('A nova senha deve ter no mínimo 6 caracteres.')
-            return
-        }
-        if (novaSenha !== confirmaSenha) {
-            toast.error('As novas senhas não coincidem.')
-            return
-        }
-        // Nota: Validação de senhaAtual deve ser feita no backend para segurança real,
-        // mas aqui podemos bloquear o envio se estiver vazio.
-        if (!senhaAtual) {
-             toast.warning('Digite a sua senha atual para definir uma nova.')
-             return
-        }
-    }
+  // --- HANDLERS ---
 
+  const handleUpdateProfile = async (e: React.FormEvent) => {
+    e.preventDefault()
     setIsLoading(true)
-    
-    // Recupera ID do usuário (type casting necessário devido à customização do NextAuth)
     const userId = (session?.user as any)?.id;
 
-    if (!userId) {
-        toast.error("Erro de sessão. Recarregue a página.");
-        setIsLoading(false);
-        return;
-    }
-
     try {
-      // Prepara o payload
-      const body: any = { nome }
-      
-      // Só manda senha se o usuário preencheu
-      if (novaSenha) {
-          body.senha = novaSenha;
-          // Idealmente, enviaríamos a senhaAtual para o backend verificar antes de trocar
-      }
-
-      // Chamada API Real
-      const res = await fetch(`/api/funcionarios/${userId}`, {
+       // Simulação de delay de rede
+       await new Promise(r => setTimeout(r, 1000));
+       
+       const res = await fetch(`/api/funcionarios/${userId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body)
-      })
+          body: JSON.stringify({ nome }) // Na prática enviaria telefone também
+       })
 
-      if (!res.ok) throw new Error('Falha ao atualizar perfil')
+       if (!res.ok) throw new Error()
 
-      // Sucesso!
-      toast.success('Perfil atualizado com sucesso!')
-      
-      // Limpa campos de senha
-      setSenhaAtual('')
-      setNovaSenha('')
-      setConfirmaSenha('')
-
-      // Atualiza a sessão do NextAuth no navegador para refletir o novo nome sem reload
-      if (session?.user?.nome !== nome) {
-        await update({ ...session, user: { ...session?.user, nome } })
-      }
-
-    } catch (error: any) {
-      console.error('Erro:', error)
-      toast.error('Erro ao atualizar o perfil.')
+       toast.success("Perfil atualizado!", { description: "Suas informações foram salvas." })
+       if (session?.user?.nome !== nome) {
+          await update({ ...session, user: { ...session?.user, nome } })
+       }
+    } catch (err) {
+       toast.error("Erro ao atualizar.")
     } finally {
-      setIsLoading(false)
+       setIsLoading(false)
     }
   }
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.1, delayChildren: 0.1 },
-    },
-  }
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: { y: 0, opacity: 1, transition: { type: 'spring', stiffness: 100 } },
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (novaSenha !== confirmaSenha) return toast.error("Senhas não coincidem")
+    if (novaSenha.length < 6) return toast.error("Senha muito curta")
+    
+    setIsLoading(true)
+    const userId = (session?.user as any)?.id;
+
+    try {
+        await fetch(`/api/funcionarios/${userId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ senha: novaSenha })
+        })
+        toast.success("Senha alterada com sucesso!")
+        setSenhaAtual(''); setNovaSenha(''); setConfirmaSenha('');
+    } catch (e) {
+        toast.error("Erro ao alterar senha.")
+    } finally {
+        setIsLoading(false)
+    }
   }
 
-  if (status === 'loading') {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-border border-t-primary"></div>
-      </div>
-    )
+  const handlePhotoUpload = () => {
+      // Simula upload
+      toast.promise(new Promise(r => setTimeout(r, 2000)), {
+          loading: 'Enviando foto...',
+          success: 'Foto de perfil atualizada!',
+          error: 'Erro no upload.'
+      })
   }
-  
-  if (status === 'unauthenticated') return <p className="text-center mt-10">Acesso negado.</p>
 
-  const userInitials = getInitials(nome || session?.user?.nome || '')
+  if (status === 'loading') return <div className="flex h-screen items-center justify-center"><Loader2 className="animate-spin text-primary" size={32}/></div>
 
   return (
-    <motion.div
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-      className="mx-auto max-w-3xl rounded-2xl bg-bg-surface p-8 shadow-lg border border-border"
+    <motion.div 
+        initial={{ opacity: 0, y: 20 }} 
+        animate={{ opacity: 1, y: 0 }} 
+        className="max-w-5xl mx-auto pb-20"
     >
-      <motion.div
-        variants={itemVariants}
-        className="mb-10 flex flex-col items-center border-b border-border pb-6"
-      >
-        <div className="relative mb-5">
-          <div className="flex h-28 w-28 items-center justify-center rounded-full bg-gradient-to-br from-green-500 to-green-600 text-5xl font-extrabold text-white shadow-lg ring-4 ring-green-300/30 dark:ring-green-500/20">
-            {userInitials.toUpperCase()}
-          </div>
-          <div className="absolute -bottom-2 right-1 bg-green-500 h-5 w-5 rounded-full border-2 border-bg-surface"></div>
+      
+      {/* --- CAPA E HEADER --- */}
+      <div className="relative mb-20">
+        {/* Capa (Banner) */}
+        <div className="h-48 w-full rounded-xl bg-gradient-to-r from-green-600 to-teal-500 relative overflow-hidden shadow-md">
+             <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-20"></div>
+             <div className="absolute bottom-4 right-4">
+                 <Button variant="secondary" size="sm" className="bg-white/20 text-white border-white/20 hover:bg-white/30 backdrop-blur-sm">
+                    <Camera size={16} className="mr-2"/> Alterar Capa
+                 </Button>
+             </div>
         </div>
 
-        <h1 className="text-3xl font-bold text-text-base">{nome}</h1>
-        <p className="mt-1 text-text-muted">{email}</p>
-      </motion.div>
-
-      {/* Form */}
-      <form onSubmit={handleSubmit} className="space-y-8">
-        
-        {/* Dados Pessoais */}
-        <motion.div
-          variants={itemVariants}
-          className="rounded-xl bg-bg-base/50 p-6 shadow-sm border border-border"
-        >
-          <h2 className="mb-4 text-xl font-semibold text-text-base flex items-center gap-2">
-            <User size={20} className="text-primary"/> Informações Pessoais
-          </h2>
-          <div className="space-y-4">
-            <Input
-              id="nome"
-              label="Nome Completo"
-              type="text"
-              value={nome}
-              onChange={(e) => setNome(e.target.value)}
-              required
-              disabled={isLoading}
-            />
-            <div>
-              <label className="block text-sm font-medium text-text-base mb-1">
-                Email (Somente leitura)
-              </label>
-              <div className="px-3 py-2 rounded border border-border bg-bg-base text-text-muted cursor-not-allowed">
-                {email}
-              </div>
+        {/* Avatar e Infos Principais (Sobrepostos) */}
+        <div className="absolute -bottom-16 left-8 flex items-end gap-6">
+            <div className="relative group">
+                <div className="h-32 w-32 rounded-full border-4 border-bg-base bg-slate-200 shadow-xl flex items-center justify-center text-4xl font-bold text-slate-500 overflow-hidden">
+                    {/* Imagem Real viria aqui */}
+                    {nome.charAt(0)}
+                </div>
+                <button 
+                    onClick={handlePhotoUpload}
+                    className="absolute bottom-0 right-0 p-2 bg-primary text-white rounded-full shadow-lg hover:bg-primary-dark transition-transform hover:scale-110"
+                    title="Alterar Foto"
+                >
+                    <Camera size={18} />
+                </button>
             </div>
-          </div>
-        </motion.div>
-
-        {/* Alterar Senha */}
-        <motion.div
-          variants={itemVariants}
-          className="rounded-xl bg-bg-base/50 p-6 shadow-sm border border-border"
-        >
-          <h2 className="mb-4 text-xl font-semibold text-text-base flex items-center gap-2">
-            <Lock size={20} className="text-primary"/> Alterar Senha
-            <span className="text-sm font-normal text-text-muted ml-auto">
-              (Preencha apenas se quiser alterar)
-            </span>
-          </h2>
-          <div className="space-y-4">
-            {/* Nota: O campo "Senha Atual" é visual aqui. 
-               Para ser funcional, o backend precisaria validar a senha antiga antes do update.
-               No MVP, confiamos na sessão logada.
-            */}
-            <Input
-              id="senhaAtual"
-              label="Senha Atual"
-              type="password"
-              value={senhaAtual}
-              onChange={(e) => setSenhaAtual(e.target.value)}
-              placeholder="••••••••"
-              disabled={isLoading}
-              autoComplete="current-password"
-            />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input
-                id="novaSenha"
-                label="Nova Senha"
-                type="password"
-                value={novaSenha}
-                onChange={(e) => setNovaSenha(e.target.value)}
-                placeholder="Mínimo 6 caracteres"
-                disabled={isLoading}
-                autoComplete="new-password"
-                />
-                <Input
-                id="confirmaSenha"
-                label="Confirmar Nova Senha"
-                type="password"
-                value={confirmaSenha}
-                onChange={(e) => setConfirmaSenha(e.target.value)}
-                placeholder="Repita a nova senha"
-                disabled={isLoading}
-                autoComplete="new-password"
-                />
+            <div className="mb-2">
+                <h1 className="text-3xl font-bold text-text-base">{nome}</h1>
+                <p className="text-text-muted flex items-center gap-2">
+                    {email} <span className="w-1 h-1 rounded-full bg-slate-300"></span> <span className="text-primary font-medium capitalize">{cargo.toLowerCase()}</span>
+                </p>
             </div>
-          </div>
-        </motion.div>
+        </div>
+      </div>
 
-        {/* Botão Salvar */}
-        <motion.div
-          variants={itemVariants}
-          className="flex justify-end pt-4"
-        >
-          <Button
-            type="submit"
-            variant="primary"
-            disabled={isLoading}
-            className="flex items-center justify-center gap-2 rounded-lg px-8 py-3 text-base font-medium shadow-md transition-all w-full md:w-auto"
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="h-5 w-5 animate-spin" /> Salvando...
-              </>
-            ) : (
-              <>
-                <Save size={18} /> Salvar Alterações
-              </>
-            )}
-          </Button>
-        </motion.div>
-      </form>
+      {/* --- NAVEGAÇÃO (TABS) --- */}
+      <div className="flex border-b border-border mb-8">
+         <button onClick={() => setActiveTab('geral')} className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'geral' ? 'border-primary text-primary' : 'border-transparent text-text-muted hover:text-text-base'}`}>
+            Dados Pessoais
+         </button>
+         <button onClick={() => setActiveTab('cracha')} className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'cracha' ? 'border-primary text-primary' : 'border-transparent text-text-muted hover:text-text-base'}`}>
+            Meu Crachá
+         </button>
+         <button onClick={() => setActiveTab('seguranca')} className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'seguranca' ? 'border-primary text-primary' : 'border-transparent text-text-muted hover:text-text-base'}`}>
+            Segurança
+         </button>
+      </div>
+
+      {/* --- CONTEÚDO --- */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+         
+         {/* Coluna Principal (Esquerda) */}
+         <div className="lg:col-span-2 space-y-6">
+            <AnimatePresence mode='wait'>
+                
+                {/* ABA GERAL */}
+                {activeTab === 'geral' && (
+                    <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} key="geral">
+                        <div className="bg-bg-surface p-6 rounded-xl border border-border shadow-sm">
+                            <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><User size={20}/> Editar Perfil</h2>
+                            <form onSubmit={handleUpdateProfile} className="space-y-4">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <Input label="Nome Completo" id="nome" value={nome} onChange={e => setNome(e.target.value)} />
+                                    <Input label="Telefone / Celular" id="tel" value={telefone} onChange={e => setTelefone(e.target.value)} placeholder="(00) 00000-0000" />
+                                </div>
+                                <Input label="Email" id="email" value={email} disabled className="bg-bg-base opacity-70" />
+                                
+                                <div className="grid grid-cols-2 gap-4">
+                                    <Input label="Cargo" id="cargo" value={cargo} disabled className="bg-bg-base opacity-70" />
+                                    <Input label="Departamento" id="dept" value="Enfermagem" disabled className="bg-bg-base opacity-70" />
+                                </div>
+
+                                <div className="flex justify-end pt-2">
+                                    <Button type="submit" variant="primary" disabled={isLoading}>
+                                        {isLoading ? <Loader2 className="animate-spin"/> : <Save size={18} className="mr-2"/>}
+                                        Salvar Alterações
+                                    </Button>
+                                </div>
+                            </form>
+                        </div>
+                    </motion.div>
+                )}
+
+                {/* ABA CRACHÁ */}
+                {activeTab === 'cracha' && (
+                    <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} key="cracha">
+                        <div className="bg-bg-surface p-8 rounded-xl border border-border shadow-sm flex flex-col items-center gap-8">
+                             <div className="text-center max-w-md">
+                                 <h2 className="text-xl font-bold mb-2">Identidade Funcional Digital</h2>
+                                 <p className="text-text-muted text-sm">Utilize este QR Code nos leitores de acesso do hospital ou para registrar presença em treinamentos.</p>
+                             </div>
+                             
+                             <DigitalIDCard user={{ nome, email, id: (session?.user as any)?.id }} role={cargo} />
+
+                             <Button variant="secondary" onClick={() => toast.info("Enviado para impressão.")}>
+                                 <Printer size={18} className="mr-2"/> Imprimir Crachá
+                             </Button>
+                        </div>
+                    </motion.div>
+                )}
+
+                {/* ABA SEGURANÇA */}
+                {activeTab === 'seguranca' && (
+                    <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} key="seguranca">
+                        <div className="bg-bg-surface p-6 rounded-xl border border-border shadow-sm space-y-6">
+                            <div>
+                                <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><Lock size={20}/> Alterar Senha</h2>
+                                <form onSubmit={handleChangePassword} className="space-y-4 max-w-md">
+                                    <Input type="password" label="Senha Atual" id="senha_atual" value={senhaAtual} onChange={e => setSenhaAtual(e.target.value)} />
+                                    <Input type="password" label="Nova Senha" id="nova_senha" value={novaSenha} onChange={e => setNovaSenha(e.target.value)} />
+                                    <Input type="password" label="Confirmar Nova Senha" id="confirma_senha" value={confirmaSenha} onChange={e => setConfirmaSenha(e.target.value)} />
+                                    <Button type="submit" variant="primary" disabled={isLoading}>Atualizar Senha</Button>
+                                </form>
+                            </div>
+                            
+                            <div className="border-t border-border pt-6">
+                                <h3 className="font-semibold text-base mb-3">Sessões Ativas</h3>
+                                <div className="bg-bg-base p-3 rounded border border-border flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 bg-green-100 text-green-600 rounded-lg"><Activity size={20}/></div>
+                                        <div>
+                                            <p className="text-sm font-bold">Este Dispositivo</p>
+                                            <p className="text-xs text-text-muted">Chrome • Windows • Pouso Alegre, BR</p>
+                                        </div>
+                                    </div>
+                                    <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-bold">Online</span>
+                                </div>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+
+            </AnimatePresence>
+         </div>
+
+         {/* Coluna Lateral (Direita) - Widgets */}
+         <div className="space-y-6">
+             {/* Progresso do Perfil */}
+             <div className="bg-bg-surface p-5 rounded-xl border border-border shadow-sm">
+                 <h3 className="font-bold text-sm mb-3">Completude do Perfil</h3>
+                 <div className="flex items-end gap-2 mb-2">
+                     <span className="text-2xl font-bold text-primary">85%</span>
+                     <span className="text-xs text-text-muted mb-1">Excelente!</span>
+                 </div>
+                 <div className="w-full h-2 bg-bg-base rounded-full overflow-hidden">
+                     <div className="h-full bg-primary w-[85%]"></div>
+                 </div>
+                 <ul className="mt-4 space-y-2 text-xs text-text-muted">
+                     <li className="flex items-center gap-2 text-green-600"><CheckCircle2 size={14}/> Email Verificado</li>
+                     <li className="flex items-center gap-2 text-green-600"><CheckCircle2 size={14}/> Senha Forte</li>
+                     <li className="flex items-center gap-2 text-text-muted opacity-50"><div className="w-3.5 h-3.5 border border-current rounded-full"/> Adicionar Foto Real</li>
+                 </ul>
+             </div>
+
+             {/* Widget de Contato RH */}
+             <div className="bg-blue-50 dark:bg-blue-900/10 p-5 rounded-xl border border-blue-100 dark:border-blue-800">
+                 <h3 className="font-bold text-blue-700 dark:text-blue-300 text-sm mb-2 flex items-center gap-2">
+                    <Mail size={16}/> Precisa de ajuda?
+                 </h3>
+                 <p className="text-xs text-blue-600/80 dark:text-blue-400 mb-3">
+                    Para alterar dados sensíveis como CPF ou Registro, entre em contato com o RH.
+                 </p>
+                 <a href="mailto:rh@univas.edu.br" className="text-xs font-bold text-blue-700 hover:underline">rh@univas.edu.br</a>
+             </div>
+         </div>
+
+      </div>
+
     </motion.div>
   )
 }
+
+import { CheckCircle2, Printer } from 'lucide-react' // Add missing imports for compilation

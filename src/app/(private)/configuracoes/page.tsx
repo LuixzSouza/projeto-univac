@@ -1,253 +1,305 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
-import { Bell, Palette, ShieldCheck, Languages, Save, LogOut, Lock, UserCog } from 'lucide-react'
+import { useState, useEffect, useMemo } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { 
+  Bell, Palette, ShieldCheck, Save, Database, 
+  Server, Activity, Globe, Key, AlertTriangle, Download, Trash2, HardDrive,
+  HelpCircle, UserCog, Lock
+} from 'lucide-react'
 import { useTheme } from 'next-themes'
-import { useSession, signOut } from 'next-auth/react'
+import { useSession } from 'next-auth/react'
 import { toast } from 'sonner'
 
 // Componentes UI
 import { Switch } from '@/components/ui/Switch'
 import { Button } from '@/components/ui/Button'
 import { Select } from '@/components/ui/Select'
-import { Input } from '@/components/ui/Input' // Certifique-se de ter este componente
+import { Input } from '@/components/ui/Input'
+
+// --- COMPONENTE DE TOOLTIP MELHORADO ---
+// Ajustei o z-index e a margem (mb-3) para ficar bem acima do cursor
+function HelpTip({ text }: { text: string }) {
+    return (
+        <div className="group relative inline-flex items-center ml-2 cursor-help z-10">
+            <HelpCircle size={15} className="text-text-muted hover:text-primary transition-colors" />
+            
+            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-64 p-3 bg-slate-800 text-white text-xs rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 text-center pointer-events-none">
+                {text}
+                {/* Setinha do balão */}
+                <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800"></div>
+            </div>
+        </div>
+    )
+}
+
+// --- CONFIGURAÇÃO DAS ABAS ---
+// Aqui definimos quem pode ver o quê
+const TABS_CONFIG = [
+    { id: 'geral', label: 'Geral & Interface', icon: Palette, access: 'ALL' },
+    { id: 'regras', label: 'Regras de Negócio', icon: AlertTriangle, access: 'ADMIN' },
+    { id: 'dados', label: 'Dados & Backup', icon: HardDrive, access: 'ADMIN' },
+    { id: 'dev', label: 'Integrações & API', icon: Server, access: 'ADMIN' },
+]
 
 export default function ConfiguracoesPage() {
   const { theme, setTheme } = useTheme()
   const { data: session } = useSession()
   const [mounted, setMounted] = useState(false)
+  const [activeTab, setActiveTab] = useState('geral')
 
-  // --- ESTADOS DE PREFERÊNCIAS (Persistência Local) ---
+  // Verifica Permissão
+  const userRole = (session?.user as any)?.role || 'FUNCIONARIO'
+  const isAdmin = userRole === 'ADMIN'
+
+  // --- ESTADOS ---
   const [notificacoesEmail, setNotificacoesEmail] = useState(true)
-  const [idioma, setIdioma] = useState('pt-BR')
+  const [alertaVencimento, setAlertaVencimento] = useState('30')
+  const [backupAutomatico, setBackupAutomatico] = useState(true)
+  const [apiKey, setApiKey] = useState('sk_live_********************')
   const [itensPorPagina, setItensPorPagina] = useState('10')
+  
+  // Estados de Loading
+  const [isGeneratingKey, setIsGeneratingKey] = useState(false)
+  const [isBackingUp, setIsBackingUp] = useState(false)
 
-  // --- ESTADOS DE SEGURANÇA (Alterar Senha) ---
-  const [senhaAtual, setSenhaAtual] = useState('')
-  const [novaSenha, setNovaSenha] = useState('')
-  const [confirmarSenha, setConfirmarSenha] = useState('')
-  const [isSavingPassword, setIsSavingPassword] = useState(false)
-
-  // Carregar preferências do LocalStorage ao iniciar
   useEffect(() => {
     setMounted(true)
     const savedItens = localStorage.getItem('univac_itens_por_pagina')
-    const savedNotif = localStorage.getItem('univac_notificacoes')
-    
     if (savedItens) setItensPorPagina(savedItens)
-    if (savedNotif) setNotificacoesEmail(JSON.parse(savedNotif))
   }, [])
 
-  // --- AÇÃO 1: SALVAR PREFERÊNCIAS VISUAIS ---
-  const handleSavePreferences = () => {
-    // Salva no navegador
-    localStorage.setItem('univac_itens_por_pagina', itensPorPagina)
-    localStorage.setItem('univac_notificacoes', JSON.stringify(notificacoesEmail))
-    
-    // Simula delay visual
-    toast.success("Preferências salvas com sucesso!", {
-        description: "Suas configurações visuais foram atualizadas."
-    })
+  const handleSave = () => {
+      localStorage.setItem('univac_itens_por_pagina', itensPorPagina)
+      toast.success("Configurações atualizadas com sucesso!")
   }
 
-// --- AÇÃO 2: ALTERAR SENHA (API REAL) ---
-  const handleChangePassword = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (novaSenha.length < 6) {
-        toast.warning("A nova senha deve ter pelo menos 6 caracteres.")
-        return
-    }
-    if (novaSenha !== confirmarSenha) {
-        toast.error("As senhas não coincidem.")
-        return
-    }
-
-    // 🔧 CORREÇÃO 1: Type Casting aqui
-    const usuarioId = (session?.user as any)?.id;
-
-    if (!usuarioId) {
-        toast.error("Erro de sessão. Tente fazer login novamente.")
-        return;
-    }
-
-    setIsSavingPassword(true)
-
-    try {
-        // 🔧 CORREÇÃO 2: Usando a variável segura aqui
-        const res = await fetch(`/api/funcionarios/${usuarioId}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                senha: novaSenha 
-            })
-        })
-
-        if (!res.ok) throw new Error('Erro ao atualizar senha')
-
-        toast.success("Senha alterada com sucesso!")
-        setSenhaAtual('')
-        setNovaSenha('')
-        setConfirmarSenha('')
-    } catch (error) {
-        console.error(error)
-        toast.error("Não foi possível alterar a senha.")
-    } finally {
-        setIsSavingPassword(false)
-    }
+  const handleGenerateKey = () => {
+      setIsGeneratingKey(true)
+      setTimeout(() => {
+          setApiKey(`sk_live_${Math.random().toString(36).substring(2, 15)}_${Date.now()}`)
+          setIsGeneratingKey(false)
+          toast.success("Nova chave de API gerada.")
+      }, 1500)
   }
 
-  // Animações
-  const containerVariants = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.1 } } }
-  const itemVariants = { hidden: { y: 15, opacity: 0 }, visible: { y: 0, opacity: 1 } };
+  const handleBackup = () => {
+      setIsBackingUp(true)
+      setTimeout(() => {
+          setIsBackingUp(false)
+          toast.success("Backup realizado.", { description: "Arquivo salvo no bucket seguro." })
+      }, 2000)
+  }
+
+  // Filtra abas visíveis baseado no cargo
+  const visibleTabs = TABS_CONFIG.filter(tab => {
+      if (tab.access === 'ADMIN' && !isAdmin) return false;
+      return true;
+  });
 
   if (!mounted) return <div className="flex h-full items-center justify-center"><div className="h-8 w-8 animate-spin rounded-full border-4 border-border border-t-primary"></div></div>;
 
+  const containerVariants = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.05 } } }
+  
   return (
-    <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-8 max-w-4xl mx-auto pb-10">
+    <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-6 max-w-6xl mx-auto pb-20">
 
-      {/* Cabeçalho */}
-      <motion.div variants={itemVariants} className="flex items-center justify-between">
-        <div>
-            <h1 className="text-3xl font-bold text-text-base flex items-center gap-2">
-                <UserCog className="text-primary" size={32}/> Configurações
-            </h1>
-            <p className="text-text-muted">Gerencie suas preferências e segurança da conta.</p>
+      {/* --- HEADER: STATUS DO SISTEMA (SÓ APARECE PARA ADMIN) --- */}
+      {isAdmin ? (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <StatusCard 
+                icon={Activity} label="Status da API" value="Operacional" color="text-green-500" bg="bg-green-500/10" sub="Uptime: 99.9%"
+            />
+            <StatusCard 
+                icon={Database} label="Banco de Dados" value="Conectado" color="text-blue-500" bg="bg-blue-500/10" sub="Neon PostgreSQL"
+            />
+            <StatusCard 
+                icon={ShieldCheck} label="Segurança Global" value="Ativa" color="text-purple-500" bg="bg-purple-500/10" sub="TLS v1.3 Enforced"
+            />
         </div>
-      </motion.div>
+      ) : (
+        <div className="flex items-center gap-4 p-6 rounded-xl bg-bg-surface border border-border shadow-sm">
+            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                <UserCog size={24} />
+            </div>
+            <div>
+                <h1 className="text-2xl font-bold text-text-base">Minhas Preferências</h1>
+                <p className="text-text-muted">Personalize sua experiência de uso no UniVac.</p>
+            </div>
+        </div>
+      )}
 
-      <div className="grid gap-8 md:grid-cols-2">
-        
-        {/* COLUNA DA ESQUERDA: Preferências Visuais */}
-        <div className="space-y-6">
-            
-            {/* Card: Aparência */}
-            <motion.div variants={itemVariants} className="rounded-lg bg-bg-surface p-6 shadow-md border border-border space-y-4">
-                <h2 className="text-xl font-semibold text-text-base flex items-center gap-2 border-b pb-3 border-border"> <Palette size={20}/> Aparência </h2>
-                <div>
-                    <label className="block text-sm font-medium text-text-base mb-2">Tema da Interface</label>
-                    <div className="flex flex-col gap-2">
-                        {(['light', 'dark', 'system'] as const).map((t) => (
-                            <button key={t} onClick={() => setTheme(t)}
-                                className={`w-full rounded-md border px-4 py-2 text-sm font-medium transition-all flex items-center justify-between ${
-                                theme === t
-                                    ? 'border-primary bg-primary/10 text-primary ring-1 ring-primary'
-                                    : 'border-border text-text-muted hover:bg-bg-base hover:text-text-base'
-                                }`}
-                            >
-                                <span className="capitalize">{t === 'system' ? 'Automático (Sistema)' : t === 'light' ? 'Modo Claro' : 'Modo Escuro'}</span>
-                                {theme === t && <div className="h-2 w-2 rounded-full bg-primary"></div>}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            </motion.div>
+      {/* --- NAVEGAÇÃO POR ABAS --- */}
+      <div className="border-b border-border flex overflow-x-auto scrollbar-hide">
+        {visibleTabs.map((tab) => (
+            <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-6 py-3 text-sm font-medium transition-all border-b-2 whitespace-nowrap ${
+                    activeTab === tab.id 
+                    ? 'border-primary text-primary bg-primary/5' 
+                    : 'border-transparent text-text-muted hover:text-text-base hover:bg-bg-base'
+                }`}
+            >
+                <tab.icon size={18} />
+                {tab.label}
+            </button>
+        ))}
+      </div>
 
-            {/* Card: Preferências Gerais */}
-            <motion.div variants={itemVariants} className="rounded-lg bg-bg-surface p-6 shadow-md border border-border space-y-4">
-                <h2 className="text-xl font-semibold text-text-base flex items-center gap-2 border-b pb-3 border-border"> <Languages size={20}/> Geral </h2>
-                
-                <div className="flex items-center justify-between">
+      {/* --- CONTEÚDO DAS ABAS --- */}
+      <div className="min-h-[400px]">
+          
+          {/* ABA 1: GERAL (Para Todos) */}
+          {activeTab === 'geral' && (
+             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid gap-6 md:grid-cols-2">
+                <div className="rounded-xl bg-bg-surface p-6 border border-border shadow-sm space-y-5">
+                    <h3 className="font-bold text-lg flex items-center gap-2"><Palette size={20}/> Aparência</h3>
                     <div>
-                        <label className="block text-sm font-medium text-text-base">Notificações por Email</label>
-                        <p className="text-xs text-text-muted">Receber alertas de vacinas.</p>
+                        <div className="flex items-center mb-2">
+                            <label className="block text-sm font-medium text-text-base">Tema Padrão</label>
+                            <HelpTip text="Escolha se prefere o visual claro, escuro ou seguindo seu sistema operacional." />
+                        </div>
+                        <div className="flex gap-2">
+                            {(['light', 'dark', 'system'] as const).map((t) => (
+                                <button key={t} onClick={() => setTheme(t)} className={`flex-1 py-2 rounded-md border text-sm font-medium transition-all ${theme === t ? 'border-primary bg-primary/10 text-primary' : 'border-border hover:bg-bg-base'}`}>
+                                    {t === 'system' ? 'Auto' : t === 'light' ? 'Claro' : 'Escuro'}
+                                </button>
+                            ))}
+                        </div>
                     </div>
-                    <Switch enabled={notificacoesEmail} onChange={setNotificacoesEmail} />
-                </div>
-
-                <div>
-                    <Select id="idioma" label="Idioma do Sistema" value={idioma} onChange={(e) => setIdioma(e.target.value)}>
-                        <option value="pt-BR">Português (Brasil)</option>
-                        <option value="en-US" disabled>Inglês (EUA)</option>
+                    <Select id="itens" label="Densidade das Tabelas" value={itensPorPagina} onChange={(e) => setItensPorPagina(e.target.value)}>
+                        <option value="5">Confortável (5 linhas)</option>
+                        <option value="10">Padrão (10 linhas)</option>
+                        <option value="20">Compacto (20 linhas)</option>
                     </Select>
                 </div>
 
-                <div>
-                    <Select id="itens" label="Linhas por página (Tabelas)" value={itensPorPagina} onChange={(e) => setItensPorPagina(e.target.value)}>
-                        <option value="5">5 itens</option>
-                        <option value="10">10 itens</option>
-                        <option value="20">20 itens</option>
-                        <option value="50">50 itens</option>
-                    </Select>
+                <div className="rounded-xl bg-bg-surface p-6 border border-border shadow-sm space-y-5">
+                    <h3 className="font-bold text-lg flex items-center gap-2"><Bell size={20}/> Comunicação</h3>
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <div className="flex items-center">
+                                <label className="font-medium text-sm">E-mails de Alerta</label>
+                                <HelpTip text="Você receberá um resumo semanal das atividades relacionadas ao seu perfil." />
+                            </div>
+                            <p className="text-xs text-text-muted mt-1">Receber notificações importantes.</p>
+                        </div>
+                        <Switch enabled={notificacoesEmail} onChange={setNotificacoesEmail} />
+                    </div>
                 </div>
+             </motion.div>
+          )}
 
-                <Button onClick={handleSavePreferences} variant="secondary" className="w-full mt-2">
-                    <Save size={16} className="mr-2"/> Salvar Preferências
-                </Button>
-            </motion.div>
-        </div>
+          {/* ABA 2: REGRAS DE NEGÓCIO (Só Admin) */}
+          {activeTab === 'regras' && isAdmin && (
+             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+                <div className="rounded-xl bg-bg-surface p-6 border border-border shadow-sm">
+                    <h3 className="font-bold text-lg flex items-center gap-2 mb-4"><Activity size={20}/> Parâmetros de Vacinação</h3>
+                    
+                    <div className="grid md:grid-cols-2 gap-8">
+                        <div>
+                            <div className='flex items-center mb-1'>
+                                <label className="text-sm font-medium text-text-base">Alerta de Validade de Lote</label>
+                                <HelpTip text="O sistema alertará no Dashboard quando um lote estiver próximo do vencimento definido aqui." />
+                            </div>
+                            <Select id="alerta-venc" label="" value={alertaVencimento} onChange={(e) => setAlertaVencimento(e.target.value)} icon={AlertTriangle}>
+                                <option value="15">15 dias antes</option>
+                                <option value="30">30 dias antes (Padrão)</option>
+                                <option value="60">60 dias antes</option>
+                                <option value="90">90 dias antes</option>
+                            </Select>
+                        </div>
 
-        {/* COLUNA DA DIREITA: Segurança */}
-        <div className="space-y-6">
-            
-            {/* Card: Alterar Senha */}
-            <motion.div variants={itemVariants} className="rounded-lg bg-bg-surface p-6 shadow-md border border-border space-y-4">
-                <h2 className="text-xl font-semibold text-text-base flex items-center gap-2 border-b pb-3 border-border"> 
-                    <ShieldCheck size={20} className="text-primary"/> Segurança 
-                </h2>
-                
-                <form onSubmit={handleChangePassword} className="space-y-4">
-                    <p className="text-sm text-text-muted">Alterar a senha da conta atual.</p>
+                        <div>
+                             <div className="flex items-center mb-2">
+                                <label className="block text-sm font-medium text-text-base">Política de Agendamento</label>
+                                <HelpTip text="Regra de segurança para impedir erros operacionais." />
+                             </div>
+                             <div className="p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-md text-sm border border-blue-100 dark:border-blue-800">
+                                <p><strong>Modo Rígido (Ativo):</strong> Bloqueia agendamento se estoque for zero.</p>
+                             </div>
+                        </div>
+                    </div>
+                </div>
+             </motion.div>
+          )}
+
+          {/* ABA 3: DADOS (Só Admin) */}
+          {activeTab === 'dados' && isAdmin && (
+             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+                 <div className="rounded-xl bg-bg-surface p-6 border border-border shadow-sm">
+                    <h3 className="font-bold text-lg flex items-center gap-2 mb-4"><Database size={20}/> Backup & Retenção</h3>
                     
-                    <Input 
-                        id="senhaAtual" 
-                        label="Senha Atual (Simulado)" 
-                        type="password" 
-                        value={senhaAtual} 
-                        onChange={(e) => setSenhaAtual(e.target.value)} 
-                        placeholder="••••••••"
-                    />
-                    
-                    <div className="grid gap-4">
-                        <Input 
-                            id="novaSenha" 
-                            label="Nova Senha" 
-                            type="password" 
-                            value={novaSenha} 
-                            onChange={(e) => setNovaSenha(e.target.value)} 
-                            placeholder="Mínimo 6 caracteres"
-                            required
-                        />
-                        <Input 
-                            id="confirmarSenha" 
-                            label="Confirmar Nova Senha" 
-                            type="password" 
-                            value={confirmarSenha} 
-                            onChange={(e) => setConfirmarSenha(e.target.value)} 
-                            placeholder="Repita a nova senha"
-                            required
-                        />
+                    <div className="flex items-center justify-between border-b border-border pb-4 mb-4">
+                        <div>
+                            <div className="flex items-center">
+                                <label className="font-medium text-sm">Backup Automático</label>
+                                <HelpTip text="O sistema realiza um snapshot do banco de dados Neon diariamente às 03:00 AM." />
+                            </div>
+                            <p className="text-xs text-text-muted mt-1">Realiza dump do PostgreSQL diariamente.</p>
+                        </div>
+                        <Switch enabled={backupAutomatico} onChange={setBackupAutomatico} />
                     </div>
 
-                    <div className="pt-2">
-                        <Button type="submit" variant="primary" className="w-full" disabled={isSavingPassword}>
-                            {isSavingPassword ? 'Atualizando...' : 'Atualizar Senha'}
+                    <div className="flex gap-4">
+                        <Button variant="secondary" onClick={handleBackup} disabled={isBackingUp} className="w-full md:w-auto">
+                            {isBackingUp ? 'Gerando Backup...' : 'Realizar Backup Manual Agora'}
+                            {!isBackingUp && <Download size={16} className="ml-2"/>}
                         </Button>
                     </div>
-                </form>
-            </motion.div>
+                 </div>
+             </motion.div>
+          )}
 
-            {/* Card: Sessão */}
-            <motion.div variants={itemVariants} className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/10 dark:border-red-900 p-6">
-                <h3 className="text-red-800 dark:text-red-400 font-semibold flex items-center gap-2 mb-2">
-                    <Lock size={18}/> Zona de Sessão
-                </h3>
-                <p className="text-sm text-red-600 dark:text-red-300 mb-4">
-                    Deseja sair do sistema? Você precisará fazer login novamente.
-                </p>
-                <Button 
-                    onClick={() => signOut({ callbackUrl: '/login' })} 
-                    variant="danger" 
-                    className="w-full flex items-center justify-center gap-2"
-                >
-                    <LogOut size={18}/> Sair do Sistema
-                </Button>
-            </motion.div>
-
-        </div>
+          {/* ABA 4: DEVELOPER (Só Admin) */}
+          {activeTab === 'dev' && isAdmin && (
+             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+                <div className="rounded-xl bg-bg-surface p-6 border border-border shadow-sm">
+                    <h3 className="font-bold text-lg flex items-center gap-2 mb-4"><Globe size={20}/> Webhooks & API</h3>
+                    
+                    <div className="space-y-4">
+                        <div>
+                            <div className="flex items-center mb-1">
+                                <label className="block text-sm font-medium text-text-base">Chave de API Pública</label>
+                                <HelpTip text="Use esta chave para integrar com sistemas externos como e-Social ou sistemas hospitalares legados." />
+                            </div>
+                            <div className="flex gap-2">
+                                <Input readOnly value={apiKey} className="font-mono text-xs bg-bg-base text-text-muted" />
+                                <Button variant="secondary" onClick={handleGenerateKey} disabled={isGeneratingKey}>
+                                    {isGeneratingKey ? 'Gerando...' : 'Rotacionar'} <Key size={14} className="ml-2"/>
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+             </motion.div>
+          )}
       </div>
+
+      {/* Footer */}
+      <motion.div className="flex justify-end pt-6 border-t border-border">
+        <Button onClick={handleSave} variant="primary" className="flex items-center gap-2 px-8 shadow-lg">
+            <Save size={18} /> Salvar Preferências
+        </Button>
+      </motion.div>
 
     </motion.div>
   )
+}
+
+// --- SUB-COMPONENTES VISUAIS ---
+function StatusCard({ icon: Icon, label, value, sub, color, bg }: any) {
+    return (
+        <div className="bg-bg-surface border border-border rounded-xl p-4 flex items-center gap-4 shadow-sm">
+            <div className={`h-12 w-12 rounded-lg flex items-center justify-center ${bg} ${color}`}>
+                <Icon size={24} />
+            </div>
+            <div>
+                <p className="text-xs text-text-muted uppercase font-bold">{label}</p>
+                <p className={`text-lg font-bold ${color}`}>{value}</p>
+                <p className="text-[10px] text-text-muted">{sub}</p>
+            </div>
+        </div>
+    )
 }

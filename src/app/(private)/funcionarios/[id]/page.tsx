@@ -9,17 +9,16 @@ import {
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import { useSession } from 'next-auth/react' // ✨ Importe de Sessão
 
 // Componentes UI
 import { Button } from '@/components/ui/Button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/Table'
 import { ProgressBar } from '@/components/ui/ProgressBar'
 import { Modal } from '@/components/ui/Modal'
-
-// Componente da Carteirinha (Criado no passo anterior)
 import { CarteirinhaVacina } from '@/components/features/funcionarios/CarteirinhaVacina'
 
-// --- Interfaces ---
+// --- Interfaces (Mantidas) ---
 interface IAplicacaoAPI {
   id: number
   dataAplicacao: string 
@@ -39,7 +38,7 @@ interface IFuncionarioDetalhado {
   aplicacoes: IAplicacaoAPI[]
 }
 
-// --- Helpers ---
+// --- Helpers (Mantidos) ---
 const verificarStatusGeral = (totalAplicacoes: number) => {
   if (totalAplicacoes >= 3) return 'Em Dia'; 
   if (totalAplicacoes > 0) return 'Parcial';
@@ -54,6 +53,7 @@ function getInitials(name: string) {
 export default function FuncionarioDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter()
   const { id } = params
+  const { data: session } = useSession() // ✨ Pegamos a sessão
   
   // Estados
   const [isLoading, setIsLoading] = useState(true)
@@ -62,8 +62,12 @@ export default function FuncionarioDetailPage({ params }: { params: { id: string
   
   // Ref para Impressão
   const componentRef = useRef<HTMLDivElement>(null)
+  
+  // ✨ RBAC & ID DO USUÁRIO LOGADO
+  const isAdmin = (session?.user as any)?.role === 'ADMIN';
+  const currentUserId = (session?.user as any)?.id;
 
-  // 1. Busca de Dados
+  // 1. Busca de Dados (Mantido)
   const fetchFuncionario = useCallback(async () => {
     try {
       setIsLoading(true)
@@ -88,7 +92,7 @@ export default function FuncionarioDetailPage({ params }: { params: { id: string
     fetchFuncionario()
   }, [fetchFuncionario])
 
-  // 2. Função de Impressão
+  // 2. Função de Impressão (Mantido)
   const handlePrint = () => {
     const content = componentRef.current
     if (!content) return
@@ -96,14 +100,12 @@ export default function FuncionarioDetailPage({ params }: { params: { id: string
     const printWindow = window.open('', '', 'width=800,height=600')
     if (printWindow) {
         printWindow.document.write('<html><head><title>Imprimir Carteirinha</title>')
-        // Injeta Tailwind para manter o estilo na impressão
         printWindow.document.write('<script src="https://cdn.tailwindcss.com"></script>')
         printWindow.document.write('</head><body >')
         printWindow.document.write(content.outerHTML)
         printWindow.document.write('</body></html>')
         printWindow.document.close()
         
-        // Aguarda renderizar estilos antes de abrir diálogo
         setTimeout(() => {
             printWindow.focus()
             printWindow.print()
@@ -124,11 +126,15 @@ export default function FuncionarioDetailPage({ params }: { params: { id: string
   const statusGeral = verificarStatusGeral(aplicacoesRecentes.length);
   const statusColor = statusGeral === 'Em Dia' ? 'text-primary' : statusGeral === 'Parcial' ? 'text-yellow-500' : 'text-red-500';
 
+  // ✨ VERIFICA SE ESTÁ VENDO O PRÓPRIO PERFIL (ID da URL == ID da Sessão)
+  const isViewingOwnProfile = String(funcionario?.id) === currentUserId;
+  const canViewSensitiveData = isAdmin || isViewingOwnProfile;
+
   // Animações
   const containerVariants = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.1 } } }
   const itemVariants = { hidden: { y: 20, opacity: 0 }, visible: { y: 0, opacity: 1 } };
 
-  // --- Renderização: Loading ---
+  // --- Renderização: Loading (Mantido) ---
   if (isLoading) {
     return (
       <div className="flex h-full min-h-[60vh] items-center justify-center">
@@ -137,7 +143,7 @@ export default function FuncionarioDetailPage({ params }: { params: { id: string
     );
   }
 
-  // --- Renderização: 404 ---
+  // --- Renderização: 404 (Mantido) ---
   if (!funcionario) {
     return (
       <div className="mx-auto max-w-lg p-8 text-center bg-bg-surface rounded-xl shadow-lg border border-border mt-10">
@@ -185,8 +191,20 @@ export default function FuncionarioDetailPage({ params }: { params: { id: string
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
             <InfoField icon={User} label="Nome Completo" value={funcionario.nome} />
             <InfoField icon={Mail} label="Email Corporativo" value={funcionario.email} />
-            <InfoField icon={CalendarDays} label="Nº de Registro" value={String(funcionario.numeroRegistro)} />
-            <InfoField icon={Shield} label="CPF" value={funcionario.cpf} isMuted />
+            
+            {/* ✨ CPF/REGISTRO: Visível para Admin OU Próprio Usuário */}
+            {canViewSensitiveData ? (
+                <>
+                  <InfoField icon={CalendarDays} label="Nº de Registro" value={String(funcionario.numeroRegistro)} />
+                  <InfoField icon={Shield} label="CPF" value={funcionario.cpf} isMuted />
+                </>
+            ) : (
+                /* Placeholder para Manter Layout */
+                <>
+                  <InfoField icon={CalendarDays} label="Nº de Registro" value="Acesso Restrito" isMuted />
+                  <InfoField icon={Shield} label="CPF" value="Acesso Restrito" isMuted />
+                </>
+            )}
           </div>
         </motion.div>
 
@@ -212,15 +230,18 @@ export default function FuncionarioDetailPage({ params }: { params: { id: string
           </div>
 
           <div className="space-y-3 mt-8">
-            <Button variant="secondary" className="w-full justify-start" onClick={() => router.push('/agenda')}>
-               <CalendarDays size={18} className="mr-2 text-text-muted"/> Agendar Dose
-            </Button>
+            {/* ✨ RBAC: Botão Agendar Dose só aparece para Admin */}
+            {isAdmin && (
+                <Button variant="secondary" className="w-full justify-start" onClick={() => router.push('/agenda')}>
+                    <CalendarDays size={18} className="mr-2 text-text-muted"/> Agendar Dose
+                </Button>
+            )}
             
             <Button 
                 onClick={() => setIsCarteirinhaOpen(true)}
                 className="w-full justify-start bg-blue-600 hover:bg-blue-700 text-white border-none shadow-sm"
             >
-               <FileBadge size={18} className="mr-2"/> Carteirinha Digital
+                <FileBadge size={18} className="mr-2"/> Carteirinha Digital
             </Button>
           </div>
         </motion.div>
@@ -237,14 +258,13 @@ export default function FuncionarioDetailPage({ params }: { params: { id: string
 
       {/* --- MODAL CARTEIRINHA --- */}
       <AnimatePresence>
-         {isCarteirinhaOpen && (
+         {isCarteirinhaOpen && funcionario && (
             <Modal 
                 isOpen={isCarteirinhaOpen} 
                 onClose={() => setIsCarteirinhaOpen(false)} 
                 title="Documento Oficial"
             >
                 <div className="flex flex-col gap-4">
-                    {/* Área de Visualização com Scroll se necessário */}
                     <div className="max-h-[60vh] overflow-y-auto border border-gray-200 rounded-lg shadow-inner bg-gray-50">
                         <CarteirinhaVacina 
                             ref={componentRef} 
@@ -270,7 +290,7 @@ export default function FuncionarioDetailPage({ params }: { params: { id: string
   )
 }
 
-// --- Sub-componentes de Apresentação ---
+// --- Sub-componentes de Apresentação (Mantidos) ---
 
 interface InfoFieldProps {
   label: string;

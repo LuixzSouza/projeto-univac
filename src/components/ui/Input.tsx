@@ -3,22 +3,24 @@ import React, { forwardRef } from 'react'
 import { AlertCircle } from 'lucide-react'
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  label: string
+  label?: string // ✨ Agora é opcional (?)
   icon?: React.ElementType
-  error?: string // ✨ Nova prop para mensagem de erro
+  error?: string
 }
 
-// Usamos forwardRef para garantir compatibilidade com React Hook Form e foco manual
 export const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ label, id, icon: Icon, className, error, ...props }, ref) => {
     return (
       <div className="w-full"> 
-        <label
-          htmlFor={id}
-          className={`block text-sm font-medium mb-1.5 ${error ? 'text-red-500' : 'text-text-base'}`}
-        >
-          {label}
-        </label>
+        {/* Só renderiza se tiver label */}
+        {label && (
+            <label
+            htmlFor={id}
+            className={`block text-sm font-medium mb-1.5 ${error ? 'text-red-500' : 'text-text-base'}`}
+            >
+            {label}
+            </label>
+        )}
         
         <div className="relative">
           {Icon && (
@@ -45,7 +47,6 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             {...props}
           />
 
-          {/* Ícone de alerta se tiver erro */}
           {error && (
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
               <AlertCircle className="h-5 w-5 text-red-500" aria-hidden="true" />
@@ -53,7 +54,6 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           )}
         </div>
 
-        {/* Mensagem de erro abaixo do input */}
         {error && (
           <p className="mt-1 text-xs text-red-500 animate-in slide-in-from-top-1">
             {error}
@@ -63,5 +63,4 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     )
   }
 )
-
 Input.displayName = 'Input'

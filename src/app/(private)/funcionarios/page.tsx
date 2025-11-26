@@ -1,24 +1,28 @@
 'use client'
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import { useSession } from 'next-auth/react' // <--- Importe de Sessão
-import { FuncionarioTable, IFuncionario } from '@/components/features/funcionarios/FuncionarioTable'
+import { useSession } from 'next-auth/react' // Para Sessão e RBAC
+import { FuncionarioTable, IFuncionario } from '@/components/features/funcionarios/FuncionarioTable' // Assume a interface IFuncionario vem daqui
 import { FuncionarioForm } from '@/components/features/funcionarios/FuncionarioForm'
 
 import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
 import { ConfirmationModal } from '@/components/ui/ConfirmationModal'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Plus, Users, Search, Filter as FilterIcon } from 'lucide-react'
+import { Plus, Users, Search, Filter as FilterIcon, Info } from 'lucide-react'
 import { PaginationControls } from '@/components/ui/PaginationControls'
 import { toast } from 'sonner'
-import { logAction } from '@/lib/logger' // <--- Importe do Logger
+import { logAction } from '@/lib/logger' // Para Logs de Segurança
 
 export default function FuncionariosPage() {
-  const { data: session } = useSession() // <--- Pegamos quem está logado
+  const { data: session } = useSession()
+  const userRole = (session?.user as any)?.role || 'FUNCIONARIO' 
+  const isAdmin = userRole === 'ADMIN' // Flag para controle de visibilidade
+  const currentUserId = (session?.user as any)?.id; // ID do usuário logado (String)
+  
   const [filtroFuncionarios, setFiltroFuncionarios] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage] = useState(5)
+  const [itemsPerPage] = useState(10)
   
   const [isFormModalOpen, setIsFormModalOpen] = useState(false)
   const [funcionarioEmEdicao, setFuncionarioEmEdicao] = useState<IFuncionario | null>(null)
@@ -29,7 +33,7 @@ export default function FuncionariosPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [funcionarios, setFuncionarios] = useState<IFuncionario[]>([])
 
-  // --- CARREGA DO BANCO DE DADOS ---
+  // --- CARREGA DADOS DO BANCO ---
   const carregarFuncionarios = useCallback(async () => {
     try {
       if (funcionarios.length === 0) setIsLoading(true)
@@ -51,16 +55,25 @@ export default function FuncionariosPage() {
     carregarFuncionarios()
   }, [carregarFuncionarios])
 
-  // --- FILTROS E PAGINAÇÃO ---
+  // --- FILTROS (Lógica RBAC e Texto) ---
   const funcionariosFiltrados = useMemo(() => {
-    if (!filtroFuncionarios) return funcionarios
+    let list = funcionarios;
+    
+    // 1. RBAC FILTER: Se não é Admin, restringe a lista ao próprio usuário
+    if (!isAdmin && currentUserId) {
+        list = list.filter(f => String(f.id) === currentUserId);
+    }
+    
+    // 2. TEXT FILTER: Aplica a busca de texto
+    if (!filtroFuncionarios) return list;
     const lowerFilter = filtroFuncionarios.toLowerCase()
-    return funcionarios.filter(func =>
+    
+    return list.filter(func =>
       func.nome.toLowerCase().includes(lowerFilter) ||
       func.email.toLowerCase().includes(lowerFilter) ||
       String(func.numeroRegistro).includes(lowerFilter)
     )
-  }, [funcionarios, filtroFuncionarios])
+  }, [funcionarios, filtroFuncionarios, isAdmin, currentUserId])
 
   const funcionariosPaginados = useMemo(() => {
     const firstItemIndex = (currentPage - 1) * itemsPerPage
@@ -74,15 +87,18 @@ export default function FuncionariosPage() {
     setCurrentPage(1)
   }
 
-  // --- MODAIS ---
+  // --- MODAIS E HANDLERS ---
   const handleOpenAddModal = () => { 
-    setFuncionarioEmEdicao(null) 
-    setIsFormModalOpen(true) 
+    if (!isAdmin) return toast.error("Ação restrita a Administradores.");
+    setFuncionarioEmEdicao(null); setIsFormModalOpen(true); 
   }
 
   const handleOpenEditModal = (funcionario: IFuncionario) => { 
-    setFuncionarioEmEdicao(funcionario) 
-    setIsFormModalOpen(true) 
+     // Permite edição se for Admin OU se for o próprio usuário
+     if (!isAdmin && String(funcionario.id) !== currentUserId) {
+         return toast.error("Você só pode visualizar seus próprios dados.");
+     }
+     setFuncionarioEmEdicao(funcionario); setIsFormModalOpen(true); 
   }
 
   const handleCloseFormModal = () => { 
@@ -91,8 +107,8 @@ export default function FuncionariosPage() {
   }
 
   const handleOpenDeleteModal = (funcionario: IFuncionario) => { 
-    setFuncionarioParaExcluir(funcionario) 
-    setIsDeleteModalOpen(true) 
+     if (!isAdmin) return toast.error("Ação restrita a Administradores.");
+     setFuncionarioParaExcluir(funcionario); setIsDeleteModalOpen(true); 
   }
 
   const handleCloseDeleteModal = () => { 
@@ -100,7 +116,6 @@ export default function FuncionariosPage() {
     setTimeout(() => setFuncionarioParaExcluir(null), 300) 
   }
 
-  // --- AÇÕES DE API ---
   const handleSuccessSave = async () => {
     await carregarFuncionarios()
   }
@@ -109,12 +124,8 @@ export default function FuncionariosPage() {
     if (!funcionarioParaExcluir) return
 
     try {
-      // Mostra loading
       const toastId = toast.loading("Excluindo funcionário...")
-
-      const res = await fetch(`/api/funcionarios/${funcionarioParaExcluir.id}`, {
-        method: 'DELETE'
-      })
+      const res = await fetch(`/api/funcionarios/${funcionarioParaExcluir.id}`, { method: 'DELETE' })
 
       if (!res.ok) {
          const erro = await res.json()
@@ -156,30 +167,44 @@ export default function FuncionariosPage() {
         <h1 className="text-3xl font-bold text-text-base flex items-center gap-2">
           <Users size={28}/> Gestão de Funcionários
         </h1>
-        <Button onClick={handleOpenAddModal} className="flex items-center gap-2">
-          <Plus size={18} /> Adicionar Funcionário
-        </Button>
+        {/* Botão ADICIONAR (Apenas Admin) */}
+        {isAdmin && (
+            <Button onClick={handleOpenAddModal} className="flex items-center gap-2">
+              <Plus size={18} /> Adicionar Funcionário
+            </Button>
+        )}
       </motion.div>
 
       <motion.div className="space-y-4 rounded-lg bg-bg-surface p-6 shadow-md border border-border">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div className='relative flex-grow md:max-w-xs'>
-            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-              <Search size={16} className='text-text-muted'/>
+        
+        {/* BARRA DE AÇÃO E FILTRO (Condicional) */}
+        {isAdmin ? (
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div className='relative flex-grow md:max-w-xs'>
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                  <Search size={16} className='text-text-muted'/>
+                </div>
+                <input
+                  type="text"
+                  placeholder="Filtrar por nome, email, registro..."
+                  value={filtroFuncionarios}
+                  onChange={handleFiltroChange}
+                  className="w-full rounded border border-border bg-bg-base py-2 pl-9 pr-3 text-sm text-text-base placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50"
+                />
+              </div>
+              <p className="flex-shrink-0 text-sm text-text-muted">
+                {funcionariosFiltrados.length} {funcionariosFiltrados.length === 1 ? 'funcionário encontrado' : 'funcionários encontrados'}
+              </p>
             </div>
-            <input
-              type="text"
-              placeholder="Filtrar por nome, email, registro..."
-              value={filtroFuncionarios}
-              onChange={handleFiltroChange}
-              className="w-full rounded border border-border bg-bg-base py-2 pl-9 pr-3 text-sm text-text-base placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50"
-            />
-          </div>
-          <p className="flex-shrink-0 text-sm text-text-muted">
-            {funcionariosFiltrados.length} {funcionariosFiltrados.length === 1 ? 'funcionário encontrado' : 'funcionários encontrados'}
-          </p>
-        </div>
+        ) : (
+             /* MENSAGEM PARA FUNCIONÁRIO COMUM (Modo Leitura) */
+            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-lg flex items-center gap-3 border border-blue-200">
+                <Info size={18} className="shrink-0"/>
+                <p className="text-sm">Você está no modo de visualização. O acesso de gestão e busca é restrito a administradores.</p>
+            </div>
+        )}
 
+        {/* TABELA */}
         {funcionarios.length > 0 ? (
           funcionariosFiltrados.length > 0 ? (
             <>
@@ -187,19 +212,23 @@ export default function FuncionariosPage() {
                 data={funcionariosPaginados}
                 onEdit={handleOpenEditModal}
                 onDelete={handleOpenDeleteModal}
+                userRole={userRole} 
               />
-              <PaginationControls
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
-                itemsPerPage={itemsPerPage}
-                totalItems={funcionariosFiltrados.length}
-              />
+              {/* Paginação só se houver mais de uma página (E se for Admin, ou se for o único item e não for Admin - complexo) */}
+              {totalPages > 1 && isAdmin && (
+                  <PaginationControls
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                    itemsPerPage={itemsPerPage}
+                    totalItems={funcionariosFiltrados.length}
+                  />
+              )}
             </>
           ) : (
-            <div className="text-center py-10 text-text-muted flex flex-col items-center">
+             <div className="text-center py-10 text-text-muted flex flex-col items-center">
               <FilterIcon size={32} className="mb-2 opacity-50"/>
-              <span>Nenhum funcionário encontrado para "{filtroFuncionarios}".</span>
+              <span>Nenhum funcionário encontrado.</span>
             </div>
           )
         ) : (

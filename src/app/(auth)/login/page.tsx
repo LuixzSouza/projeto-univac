@@ -31,6 +31,12 @@ const SLIDES = [
     image: '/univas-si.png',
     quote: "Simplicidade e Segurança: Os pilares para um sistema de saúde robusto.",
     author: "Sistemas de Informação"
+  },
+  {
+    id: 4,
+    image: '/univas-ef.png',
+    quote: "Cuidar com excelência é unir conhecimento, sensibilidade e inovação.",
+    author: "Enfermagem"
   }
 ]
 
