@@ -170,7 +170,7 @@ export default function AjudaPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [expandedKey, setExpandedKey] = useState<string | null>(null)
   const [activeFilter, setActiveFilter] = useState('Todos')
-  const [isSearching, setIsSearching] = useState(false) // Estado de loading da busca
+  const [isSearching, setIsSearching] = useState(false) 
   
   // Modais
   const [isDocOpen, setIsDocOpen] = useState(false)
@@ -182,22 +182,33 @@ export default function AjudaPage() {
 
   const toggleExpand = (key: string) => setExpandedKey(expandedKey === key ? null : key)
 
-  // Simula delay de busca para dar feedback visual
+  // Delay visual de busca
   useEffect(() => {
     setIsSearching(true)
     const timer = setTimeout(() => {
         setIsSearching(false)
-    }, 500) // 500ms de "loading" fake ao digitar ou filtrar
+    }, 500) 
     return () => clearTimeout(timer)
   }, [searchTerm, activeFilter])
 
-  // Lógica de Filtro
+  // --- CORREÇÃO DO FILTRO AQUI ---
   const filteredQuestions = FAQ_CATEGORIES.flatMap(cat => 
-    cat.questions.map((q, idx) => ({ ...q, category: cat.title, icon: cat.icon, color: cat.color, key: `${cat.id}-${idx}` }))
+    cat.questions.map((q, idx) => ({ 
+        ...q, 
+        category: cat.title, 
+        icon: cat.icon, 
+        color: cat.color, 
+        key: `${cat.id}-${idx}` 
+    }))
   ).filter(q => {
-    const matchesSearch = q.question.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          (typeof q.answer === 'string' && q.answer.toLowerCase().includes(searchTerm.toLowerCase()));
+    // 1. Busca apenas na pergunta e nas tags (Evita erro no 'answer' que é JSX)
+    const term = searchTerm.toLowerCase();
+    const matchesSearch = q.question.toLowerCase().includes(term) || 
+                          q.tags.some(tag => tag.toLowerCase().includes(term));
+    
+    // 2. Filtro por Categoria/Tag
     const matchesFilter = activeFilter === 'Todos' || q.tags.includes(activeFilter);
+    
     return matchesSearch && matchesFilter;
   });
 
@@ -297,7 +308,7 @@ export default function AjudaPage() {
             )}
         </div>
 
-        {/* Coluna Direita: Ações Rápidas (Mantidas e Melhoradas) */}
+        {/* Coluna Direita: Ações Rápidas */}
         <div className="md:col-span-4 space-y-4">
             <motion.button 
                 variants={itemVariants}
@@ -335,7 +346,7 @@ export default function AjudaPage() {
         </div>
       </div>
 
-      {/* --- MODAIS (Mantidos) --- */}
+      {/* --- MODAIS --- */}
       <Modal isOpen={isDocOpen} onClose={() => setIsDocOpen(false)} title="Ficha Técnica do Sistema">
          <div className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
@@ -356,7 +367,7 @@ export default function AjudaPage() {
       <Modal isOpen={isVideoOpen} onClose={() => setIsVideoOpen(false)} title={`Tutorial: ${videoTitle}`}>
          <div className="space-y-4">
              <div className="aspect-video w-full bg-black rounded-lg flex items-center justify-center relative overflow-hidden group cursor-pointer shadow-lg border border-gray-800">
-                 <div className="absolute inset-0 bg-[url('/univas-si.png')] bg-cover bg-center opacity-40 group-hover:opacity-30 transition-opacity"></div>
+                 <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-900 opacity-50 group-hover:opacity-40 transition-opacity"></div>
                  <div className="relative z-10 h-20 w-20 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center border-2 border-white/50 group-hover:scale-110 transition-transform">
                     <PlayCircle size={48} className="text-white fill-white" />
                  </div>
@@ -429,8 +440,7 @@ function QuestionItem({ item, isOpen, onToggle, router, onOpenVideo }: any) {
     )
 }
 
-// ... (Mantenha TechItem e SupportForm iguais ao anterior, eles estão ótimos)
-function TechItem({ icon: Icon, label, value }: any) { 
+function TechItem({ icon: Icon, label, value }: any) {
     return (
         <div className="flex items-center gap-3 p-3 rounded-lg bg-bg-base border border-border">
             <div className="p-2 bg-bg-surface rounded-md text-primary"><Icon size={18} /></div>
@@ -442,7 +452,7 @@ function TechItem({ icon: Icon, label, value }: any) {
     )
 }
 
-function SupportForm({ onClose }: { onClose: () => void }) { 
+function SupportForm({ onClose }: { onClose: () => void }) {
     const [loading, setLoading] = useState(false)
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
