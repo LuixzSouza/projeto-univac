@@ -4,9 +4,9 @@ import Link from 'next/link'
 import { useState, useEffect, useRef } from 'react'
 import { motion, useScroll, AnimatePresence } from 'framer-motion'
 import { 
-  ArrowRight, ShieldCheck, BarChart3, 
+  ArrowRight, ShieldCheck, BarChart3, Calendar, Lock, 
   CheckCircle2, Cpu, HeartPulse, ChevronDown, 
-  Activity, Github 
+  Activity, Bell, Syringe, UserPlus, Zap, Play, X
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 
@@ -19,51 +19,30 @@ const PROJECT_METRICS = [
 ]
 
 const IMPACT_CARDS = [
-  { 
-    role: 'Para a Enfermagem', 
-    icon: HeartPulse,
-    color: 'text-red-500',
-    bg: 'bg-red-50',
-    title: 'Foco no Paciente', 
-    desc: 'Automatização total da burocracia. O sistema valida doses e lotes instantaneamente, permitindo foco total no cuidado.' 
-  },
-  { 
-    role: 'Para a Gestão (RH)', 
-    icon: BarChart3,
-    color: 'text-blue-500',
-    title: 'Dados em Tempo Real', 
-    desc: 'Dashboard executivo com KPIs de imunização. Adeus planilhas manuais e riscos de conformidade trabalhista.' 
-  },
-  { 
-    role: 'Para a TI (Dev)', 
-    icon: Cpu,
-    color: 'text-purple-500',
-    title: 'Arquitetura Moderna', 
-    desc: 'Stack escalável com Next.js 14, Server Actions e renderização híbrida. Segurança e performance de nível enterprise.' 
-  }
+    { role: 'Para a Enfermagem', icon: HeartPulse, color: 'text-red-500', title: 'Foco no Paciente', desc: 'Automatização total da burocracia. O sistema valida doses e lotes instantaneamente, permitindo foco total no cuidado.' },
+    { role: 'Para a Gestão (RH)', icon: BarChart3, color: 'text-blue-500', title: 'Dados em Tempo Real', desc: 'Dashboard executivo com KPIs de imunização. Adeus planilhas manuais e riscos de conformidade trabalhista.' },
+    { role: 'Para a TI (Dev)', icon: Cpu, color: 'text-purple-500', title: 'Arquitetura Moderna', desc: 'Stack escalável com Next.js 14, Server Actions e renderização híbrida. Segurança e performance de nível enterprise.' }
 ]
 
 const FAQS = [
-  { q: 'Qual a tecnologia do Banco de Dados?', a: 'Utilizamos PostgreSQL hospedado na nuvem via Neon DB, com Prisma ORM para garantir tipagem forte e segurança nas queries.' },
-  { q: 'O sistema é seguro?', a: 'Sim. A autenticação utiliza NextAuth v5 com criptografia de senhas (bcrypt) e proteção contra ataques comuns da web (CSRF/XSS).' },
-  { q: 'É possível escalar o projeto?', a: 'Com certeza. A arquitetura Serverless do Vercel permite que o sistema cresça de 10 para 10.000 usuários sem alterar a infraestrutura base.' },
+    { q: 'Qual a tecnologia do Banco de Dados?', a: 'Utilizamos PostgreSQL hospedado na nuvem via Neon DB, com Prisma ORM para garantir tipagem forte e segurança nas queries.' },
+    { q: 'O sistema é seguro?', a: 'Sim. A autenticação utiliza NextAuth v5 com criptografia de senhas (bcrypt) e proteção contra ataques comuns da web (CSRF/XSS).' },
+    { q: 'É possível escalar o projeto?', a: 'Com certeza. A arquitetura Serverless do Vercel permite que o sistema cresça de 10 para 10.000 usuários sem alterar a infraestrutura base.' },
 ]
 
-// Nota: A propriedade 'key' foi removida dos dados para evitar conflito com o React
 const TEAM_MEMBERS = [
-    { name: 'Luiz Souza', role: 'Dev Líder & Arquitetura Front-end', contribution: 'Integração completa, Design System, UX e Finalização do Back-end.', color: 'bg-green-600' },
-    { name: 'Renan Carlos', role: 'API Contributor', contribution: 'Desenvolvimento das rotas dos Funcionários.', color: 'bg-blue-600' },
-    { name: 'William', role: 'API Contributor', contribution: 'Desenvolvimento das rotas de Agendamentos.', color: 'bg-yellow-600' },
-    { name: 'Isabela', role: 'API Contributor', contribution: 'Suporte na definição inicial do Schema da Estrutura de Vacinas e Lógica de Lotes.', color: 'bg-pink-600' },
+    { name: 'Luiz Antônio de Souza', role: 'Dev Líder & Arquitetura Front-end', contribution: 'Integração completa, Design System, UX e Finalização do Back-end.', initials: 'LA', color: 'bg-green-600' },
+    { name: 'Renan Carlos', role: 'API Contributor', contribution: 'Rotas iniciais (Agendamento, Funcionários).', initials: 'RC', color: 'bg-blue-600' },
+    { name: 'William', role: 'API Contributor', contribution: 'Desenvolvimento das rotas de Vacinas e Lógica de Lotes.', initials: 'WL', color: 'bg-yellow-600' },
+    { name: 'Isabela', role: 'API Contributor', contribution: 'Suporte na definição inicial do Schema e Estrutura.', initials: 'IS', color: 'bg-pink-600' },
 ];
 
 export default function LandingPage() {
-  const { scrollYProgress } = useScroll()
+  const [text, setText] = useState('')
+  const fullText = "Simples. Segura. Digital."
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false) 
   
   // Efeito de Digitação
-  const [text, setText] = useState('')
-  const fullText = "Simples. Seguro."
-  
   useEffect(() => {
     let i = 0
     const timer = setInterval(() => {
@@ -84,7 +63,7 @@ export default function LandingPage() {
   return (
     <div className="flex min-h-screen flex-col bg-white text-slate-900 selection:bg-green-100 selection:text-green-700 overflow-x-hidden relative">
       
-      {/* --- NOVIDADE: SIMULAÇÃO DE ATIVIDADE EM TEMPO REAL --- */}
+      {/* Live Ticker Flutuante */}
       <LiveTicker />
 
       {/* NAVBAR */}
@@ -111,22 +90,24 @@ export default function LandingPage() {
       <main className="flex-1">
         
         {/* --- HERO SECTION --- */}
-        <section className="relative pt-24 pb-20 lg:pt-32 lg:pb-24 overflow-hidden">
+        <section className="relative pt-24 pb-32 lg:pt-32 lg:pb-40 overflow-hidden">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-gradient-to-b from-green-100/50 to-transparent rounded-[100%] blur-3xl -z-10 opacity-60 animate-pulse" style={{ animationDuration: '4s' }} />
           
-          <div className="container mx-auto px-6 text-center">
+          <div className="container mx-auto px-6 text-center relative z-10">
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
               className="mx-auto max-w-4xl space-y-8"
             >
-              <Link href={"/archive/TCC_KARINY.pdf"} target='_blank' className="cursor-pointer inline-flex items-center gap-2 rounded-full border border-green-200 bg-green-50/80 backdrop-blur-sm px-4 py-1.5 text-sm font-medium text-green-700 shadow-sm hover:scale-105 transition-transform cursor-default">
+              {/* BADGE DO TCC DA KARINY (Agora é Link) */}
+              <Link href="/archive/TCC_KARINY.pdf" target="_blank" className="inline-flex items-center gap-2 rounded-full border border-green-200 bg-green-50/80 backdrop-blur-sm px-4 py-1.5 text-sm font-medium text-green-700 shadow-sm hover:scale-105 transition-transform cursor-pointer group">
                 <span className="relative flex h-2.5 w-2.5">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
                 </span>
                 Projeto Integrador - Baseado no TCC da Kariny
+                <ArrowRight size={14} className="ml-1 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
               </Link>
 
               <h1 className="text-5xl font-extrabold tracking-tight text-slate-900 sm:text-6xl lg:text-7xl leading-[1.1] min-h-[1.1em]">
@@ -140,12 +121,15 @@ export default function LandingPage() {
                 Uma solução moderna para otimizar o trabalho da <strong>Enfermagem</strong> e garantir a conformidade de dados com a tecnologia mais atual do mercado.
               </p>
 
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 pb-10">
+                {/* Botão Principal: Acessar Sistema */}
                 <Link href="/app-loading">
                   <Button className="h-14 px-8 text-lg rounded-full bg-green-600 hover:bg-green-700 text-white shadow-xl shadow-green-600/30 transition-all hover:scale-105 font-semibold">
-                    Testar Sistema <ArrowRight className="ml-2 h-5 w-5" />
+                    Acessar Sistema <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </Link>
+                
+                {/* Botão Secundário: GitHub (RESTAURADO) */}
                 <Link href="https://github.com/LuixzSouza/projeto-univac" target="_blank">
                   <Button variant="secondary" className="h-14 px-8 text-lg rounded-full bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 shadow-sm hover:shadow-md transition-all gap-2">
                     <GithubIcon /> Código Fonte
@@ -154,53 +138,59 @@ export default function LandingPage() {
               </div>
             </motion.div>
 
-            {/* --- 3D DASHBOARD PREVIEW --- */}
+            {/* --- VÍDEO HERO (MOCKUP) --- */}
             <motion.div 
-              initial={{ opacity: 0, y: 40, rotateX: 10 }}
-              animate={{ opacity: 1, y: 0, rotateX: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              className="mt-20 relative mx-auto max-w-5xl perspective-1000"
+              initial={{ opacity: 0, y: 60, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
+              className="relative mx-auto max-w-5xl"
             >
-                <div className="group relative rounded-2xl border border-slate-200 bg-slate-50/50 p-2 backdrop-blur-xl lg:rounded-3xl lg:p-4 shadow-2xl shadow-slate-200/50 transform transition-transform duration-500 hover:rotate-x-2">
-                    <div className="aspect-[16/9] w-full overflow-hidden rounded-xl lg:rounded-2xl bg-slate-900 border border-slate-800 relative">
-                        {/* Mockup Visual */}
-                        <div className="absolute top-0 w-full h-12 border-b border-slate-800 flex items-center px-4 gap-2 bg-slate-900/80 backdrop-blur-sm z-10">
-                            <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                            <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                            <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                            <div className="ml-4 h-6 w-64 bg-slate-800 rounded text-xs flex items-center px-2 text-slate-500 font-mono">localhost:3000/dashboard</div>
+                <div className="group relative rounded-xl bg-slate-900 p-2 shadow-2xl shadow-green-900/20 ring-1 ring-slate-200/10 backdrop-blur-xl lg:rounded-2xl lg:p-3 cursor-pointer" onClick={() => setIsVideoModalOpen(true)}>
+                    {/* Barra de Título Fake */}
+                    <div className="absolute top-0 left-0 right-0 h-10 flex items-center px-4 gap-2 z-10 bg-gradient-to-b from-slate-900 to-transparent">
+                        <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                        <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                        <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                        <div className="mx-auto text-[10px] text-slate-500 font-mono bg-slate-800/80 px-3 py-1 rounded-full backdrop-blur-sm">
+                            univac.app/demo
+                        </div>
+                    </div>
+
+                    {/* Vídeo em Loop */}
+                    <div className="relative aspect-video w-full overflow-hidden rounded-lg lg:rounded-xl bg-black mt-8">
+                        <video 
+                            src="/video/Video-Univac.mp4" // Certifique-se que o arquivo está em public/video/
+                            className="h-full w-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-500"
+                            autoPlay 
+                            muted 
+                            loop 
+                            playsInline
+                        />
+                        
+                        {/* Botão Play Overlay */}
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/10 group-hover:bg-black/0 transition-colors">
+                            <div className="h-20 w-20 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border-2 border-white/50 shadow-2xl group-hover:scale-110 transition-transform duration-300">
+                                <Play size={40} className="text-white fill-white ml-2" />
+                            </div>
                         </div>
                         
-                        <div className="absolute inset-0 top-12 p-6 grid grid-cols-4 grid-rows-3 gap-4 opacity-90">
-                            <div className="col-span-1 bg-slate-800 rounded-lg border border-slate-700 animate-pulse delay-75"></div>
-                            <div className="col-span-1 bg-slate-800 rounded-lg border border-slate-700 animate-pulse delay-100"></div>
-                            <div className="col-span-2 row-span-2 bg-slate-800 rounded-lg border border-slate-700 relative overflow-hidden">
-                                <div className="absolute bottom-0 left-0 w-full h-1/2 bg-green-500/20 blur-2xl"></div>
-                            </div>
-                            <div className="col-span-1 row-span-2 bg-slate-800 rounded-lg border border-slate-700"></div>
-                            <div className="col-span-1 row-span-2 bg-slate-800 rounded-lg border border-slate-700"></div>
-                        </div>
-
-                        <div className="absolute inset-0 flex items-center justify-center">
-                            <Link href="/app-loading">
-                                <div className="bg-green-600 text-white px-8 py-3 rounded-full font-bold text-lg shadow-2xl shadow-green-500/50 hover:scale-110 transition-transform cursor-pointer flex items-center gap-2 group/btn">
-                                    <Activity size={20} fill="currentColor" /> Ver Demo Ao Vivo
-                                </div>
-                            </Link>
+                        {/* Badge */}
+                        <div className="absolute bottom-4 left-4 bg-black/70 backdrop-blur-md text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-2 border border-white/10">
+                            <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                            Preview do Sistema
                         </div>
                     </div>
                 </div>
+                
+                {/* Sombra/Reflexo */}
+                <div className="absolute -bottom-20 left-10 right-10 h-20 bg-green-500/20 blur-[100px] rounded-full pointer-events-none"></div>
             </motion.div>
           </div>
         </section>
 
-        {/* --- MÉTRICAS DO PROJETO --- */}
+        {/* --- MÉTRICAS --- */}
         <section className="py-16 bg-slate-900 text-white border-y border-slate-800">
-            <div className="container mx-auto px-6">
-                <div className="text-center mb-10">
-                    <h2 className="text-2xl font-bold mb-2">Eficiência Esperada</h2>
-                    <p className="text-slate-400 text-sm">Métricas baseadas na otimização de processos manuais.</p>
-                </div>
+             <div className="container mx-auto px-6">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
                     {PROJECT_METRICS.map((stat, idx) => (
                         <StatCounter key={idx} {...stat} delay={idx * 0.1} />
@@ -209,36 +199,26 @@ export default function LandingPage() {
             </div>
         </section>
 
-        {/* --- IMPACTO E JORNADA --- */}
+        {/* --- IMPACTO --- */}
         <section className="py-24 bg-white">
-          <div className="container mx-auto px-6">
-            <motion.div {...fadeInUp} className="text-center max-w-2xl mx-auto mb-16">
-              <h2 className="text-3xl font-bold tracking-tight text-slate-900">Impacto Multidisciplinar</h2>
-              <p className="mt-4 text-slate-600 text-lg">Soluções pensadas para cada stakeholder.</p>
-            </motion.div>
-
-            <div className="grid md:grid-cols-3 gap-8">
-              {IMPACT_CARDS.map((card, i) => (
-                  <SpotlightCard key={i} {...card} />
-              ))}
+            <div className="container mx-auto px-6">
+               <motion.div {...fadeInUp} className="text-center max-w-2xl mx-auto mb-16">
+                   <h2 className="text-3xl font-bold tracking-tight text-slate-900">Impacto Multidisciplinar</h2>
+               </motion.div>
+               <div className="grid md:grid-cols-3 gap-8">
+                 {IMPACT_CARDS.map((card, i) => <SpotlightCard key={i} {...card} />)}
+               </div>
             </div>
-          </div>
         </section>
 
-        {/* --- TIME DE DESENVOLVIMENTO --- */}
+        {/* --- TIME --- */}
         <section className="py-20 border-t border-slate-200 bg-slate-50">
-          <div className="container mx-auto px-6 text-center">
-            <motion.div {...fadeInUp} className="text-center max-w-2xl mx-auto mb-16">
-              <h2 className="text-3xl font-bold tracking-tight text-slate-900">O Time por Trás do Código</h2>
-              <p className="mt-4 text-slate-600 text-lg">Definindo papéis e responsabilidades no desenvolvimento do UniVac.</p>
-            </motion.div>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                {TEAM_MEMBERS.map((member, i) => (
-                    <TeamMemberCard key={i} {...member} delay={i * 0.1} />
-                ))}
+            <div className="container mx-auto px-6 text-center">
+                <h2 className="text-3xl font-bold tracking-tight text-slate-900 mb-16">O Time por Trás do Código</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                    {TEAM_MEMBERS.map((member, i) => <TeamMemberCard key={i} {...member} delay={i * 0.1} />)}
+                </div>
             </div>
-          </div>
         </section>
 
         {/* --- FAQ --- */}
@@ -259,10 +239,8 @@ export default function LandingPage() {
         <section className="py-24 bg-slate-900 text-white text-center relative overflow-hidden">
             <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-green-500/20 blur-[100px] rounded-full" />
-            
             <div className="container mx-auto px-6 relative z-10 flex flex-col items-center">
                 <h2 className="text-4xl font-bold mb-6">Pronto para otimizar sua gestão?</h2>
-                <p className="text-slate-400 max-w-xl mx-auto mb-10 text-lg">O UniVac foi feito para você. Utilize o demo e confira a eficiência.</p>
                 <Link href="/app-loading">
                     <Button className="h-14 px-10 text-lg rounded-full bg-green-500 hover:bg-green-600 text-white font-bold shadow-lg shadow-green-500/25 transition-transform hover:scale-105">
                         Testar Agora
@@ -273,27 +251,110 @@ export default function LandingPage() {
 
       </main>
 
-      {/* FOOTER */}
+      {/* --- MODAL DE VÍDEO EM TELA CHEIA --- */}
+      <AnimatePresence>
+        {isVideoModalOpen && (
+            <motion.div 
+                initial={{ opacity: 0 }} 
+                animate={{ opacity: 1 }} 
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-md p-4 md:p-10"
+                onClick={() => setIsVideoModalOpen(false)}
+            >
+                <motion.div 
+                    initial={{ scale: 0.9, y: 20 }} 
+                    animate={{ scale: 1, y: 0 }}
+                    exit={{ scale: 0.9, y: 20 }}
+                    className="relative w-full max-w-6xl aspect-video bg-black rounded-xl overflow-hidden shadow-2xl border border-white/10"
+                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                >
+                    <button 
+                        onClick={() => setIsVideoModalOpen(false)}
+                        className="absolute top-4 right-4 z-20 bg-black/50 hover:bg-white text-white hover:text-black p-2 rounded-full transition-all"
+                    >
+                        <X size={24} />
+                    </button>
+                    <video 
+                        src="/video/Video-Univac.mp4" 
+                        className="w-full h-full object-contain"
+                        controls 
+                        autoPlay 
+                    />
+                </motion.div>
+            </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* FOOTER CORRIGIDO E CENTRALIZADO */}
       <footer className="bg-slate-950 py-12 text-slate-500 text-sm border-t border-slate-900">
-        <div className="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex items-center gap-2 font-semibold text-slate-300">
-            <ShieldCheck size={20} className="text-green-600" />
-            UniVac
-          </div>
-          
-          <div className="text-center md:text-right">
-            <p>Desenvolvido por <strong>Luiz Antônio de Souza</strong> e Time</p>
-            <p className="text-slate-600 mt-1">Projeto Acadêmico UNIVÁS • 2025</p>
-          </div>
-        </div>
+         <div className="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
+            <div className="flex items-center gap-2 font-semibold text-slate-300 order-2 md:order-1">
+                <ShieldCheck size={20} className="text-green-600" /> UniVac
+            </div>
+            
+            <div className="text-right order-1 md:order-2">
+               <p className="font-medium text-slate-400">Desenvolvido por <strong>Luiz Antônio de Souza</strong> e Time</p>
+               <p className="text-xs mt-1">Renan Carlos • William • Isabela</p>
+            </div>
+         </div>
       </footer>
     </div>
   )
 }
 
-// --- SUB-COMPONENTES AVANÇADOS ---
+// --- SUB-COMPONENTES ---
 
-// 1. SPOTLIGHT CARD: Segue o mouse
+function LiveTicker() {
+    const [notification, setNotification] = useState({ text: 'Sistema Operacional', type: 'default' })
+    const [visible, setVisible] = useState(true)
+
+    useEffect(() => {
+        const messages = [
+            { text: '🔒 Criptografia End-to-End ativa', type: 'success' },
+            { text: '💉 12 novas doses registradas no último minuto', type: 'info' },
+            { text: '⚡ Latência do servidor: 14ms (Otimizado)', type: 'success' },
+            { text: '📊 Relatório de conformidade gerado automaticamente', type: 'default' },
+            { text: '☁️ Sincronização com Neon DB concluída', type: 'info' },
+            { text: '🛡️ Varredura de segurança: Nenhuma ameaça', type: 'success' },
+            { text: '🏥 Campanha de Gripe: 92% de adesão', type: 'info' },
+            { text: '✅ Verificação de lote de vacinas: OK', type: 'success' }
+        ]
+        let shuffled = messages.sort(() => 0.5 - Math.random());
+        let i = 0;
+        const interval = setInterval(() => {
+            setVisible(false)
+            setTimeout(() => {
+                setNotification(shuffled[i])
+                setVisible(true)
+                i = (i + 1) % shuffled.length
+            }, 500)
+        }, 4000)
+        return () => clearInterval(interval)
+    }, [])
+
+    return (
+        <div className="fixed bottom-6 left-6 z-50 pointer-events-none hidden sm:block">
+            <AnimatePresence mode="wait">
+                {visible && (
+                    <motion.div 
+                        key={notification.text}
+                        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 20, scale: 0.95 }}
+                        className="bg-white/90 backdrop-blur-md border border-slate-200 shadow-xl rounded-full px-5 py-2.5 flex items-center gap-3 text-xs font-medium text-slate-700"
+                    >
+                        <span className="relative flex h-2.5 w-2.5">
+                            <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${notification.type === 'success' ? 'bg-green-400' : 'bg-blue-400'}`}></span>
+                            <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${notification.type === 'success' ? 'bg-green-500' : 'bg-blue-500'}`}></span>
+                        </span>
+                        <span className="tracking-wide">{notification.text}</span>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
+    )
+}
+
 function SpotlightCard({ role, icon: Icon, title, desc, color }: any) {
     const divRef = useRef<HTMLDivElement>(null);
     const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -321,7 +382,6 @@ function SpotlightCard({ role, icon: Icon, title, desc, color }: any) {
             background: `radial-gradient(600px circle at ${position.x}px ${position.y}px, rgba(22, 163, 74, 0.1), transparent 40%)`,
           }}
         />
-        
         <div className="relative z-10">
             <div className="flex items-center gap-3 mb-6">
                 <div className={`h-10 w-10 bg-slate-50 ${color} rounded-lg flex items-center justify-center border border-slate-100`}>
@@ -336,79 +396,21 @@ function SpotlightCard({ role, icon: Icon, title, desc, color }: any) {
     );
 }
 
-// 2. LIVE TICKER: Simula atividade em tempo real
-function LiveTicker() {
-    const [notification, setNotification] = useState({ text: 'Sistema Operacional', type: 'default' })
-    const [visible, setVisible] = useState(true)
-
-    useEffect(() => {
-        const messages = [
-            { text: '🔒 Criptografia End-to-End ativa', type: 'success' },
-            { text: '💉 12 novas doses registradas no último minuto', type: 'info' },
-            { text: '⚡ Latência do servidor: 14ms (Otimizado)', type: 'success' },
-            { text: '📊 Relatório de conformidade gerado automaticamente', type: 'default' },
-            { text: '☁️ Sincronização com Neon DB concluída', type: 'info' },
-            { text: '🛡️ Varredura de segurança: Nenhuma ameaça', type: 'success' },
-            { text: '📱 5 novos acessos via Mobile App', type: 'default' },
-            { text: '🏥 Campanha de Gripe: 92% de adesão', type: 'info' },
-            { text: '📥 Backup dos dados realizado com sucesso', type: 'default' },
-            { text: '✅ Verificação de lote de vacinas: OK', type: 'success' }
-        ]
-        
-        let shuffled = messages.sort(() => 0.5 - Math.random());
-        let i = 0;
-
-        const interval = setInterval(() => {
-            setVisible(false)
-            setTimeout(() => {
-                setNotification(shuffled[i])
-                setVisible(true)
-                i = (i + 1) % shuffled.length
-            }, 500)
-        }, 4000)
-
-        return () => clearInterval(interval)
-    }, [])
-
-    return (
-        <div className="fixed bottom-6 left-6 z-50 pointer-events-none hidden sm:block">
-            <AnimatePresence mode="wait">
-                {visible && (
-                    <motion.div 
-                        key={notification.text}
-                        initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 20, scale: 0.95 }}
-                        className="bg-white/90 backdrop-blur-md border border-slate-200 shadow-xl shadow-slate-200/50 rounded-full px-5 py-2.5 flex items-center gap-3 text-xs font-medium text-slate-700"
-                    >
-                        <span className="relative flex h-2.5 w-2.5">
-                            <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${notification.type === 'success' ? 'bg-green-400' : 'bg-blue-400'}`}></span>
-                            <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${notification.type === 'success' ? 'bg-green-500' : 'bg-blue-500'}`}></span>
-                        </span>
-                        <span className="tracking-wide">{notification.text}</span>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-        </div>
-    )
-}
-
-// 3. TEAM MEMBER CARD (CORRIGIDO: Tipagem e Design)
-function TeamMemberCard({ name, role, contribution, color, delay }: { name: string, role: string, contribution: string, color: string, delay: number }) {
+function TeamMemberCard({ name, role, contribution, initials, color, delay }: any) {
     return (
         <motion.div 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay, duration: 0.5 }}
-            className="flex flex-col items-center text-center p-6 rounded-xl border border-slate-200 bg-white shadow-sm hover:shadow-lg transition-all h-full hover:-translate-y-1"
+            className="flex flex-col items-center p-4 bg-white rounded-xl shadow-md border border-slate-100 h-full"
         >
-            <div className={`w-14 h-14 ${color} rounded-full flex items-center justify-center mb-4 text-white font-bold text-xl shadow-md border-4 border-white`}>
-                {name.split(' ').map(n => n[0]).join('')}
+            <div className={`h-16 w-16 rounded-full ${color} text-white font-bold text-xl flex items-center justify-center mb-3 shadow-lg`}>
+                {initials}
             </div>
-            <h3 className="text-lg font-bold text-slate-900 mb-1 leading-tight">{name}</h3>
-            <p className="text-xs font-bold text-green-600 uppercase tracking-wide mb-3">{role}</p>
-            <p className="text-sm text-slate-500 leading-relaxed">{contribution}</p>
+            <h3 className="font-bold text-base text-slate-900 text-center">{name}</h3>
+            <p className="text-xs font-semibold text-slate-500 mb-2">{role}</p>
+            <p className="text-[11px] text-slate-600 italic text-center leading-snug">{contribution}</p>
         </motion.div>
     )
 }
