@@ -112,20 +112,6 @@ Siga os passos abaixo para rodar o projeto localmente.
 
 ---
 
-## 🖼️ Galeria do Sistema
-
-*(Adicione aqui prints reais do seu sistema para valorizar o portfólio)*
-
-| Landing Page | Dashboard |
-| :---: | :---: |
-| ![Landing Page](/public/prints/landing.png) | ![Dashboard](/public/prints/dashboard.png) |
-
-| Agenda | Carteirinha Digital |
-| :---: | :---: |
-| ![Agenda](/public/prints/agenda.png) | ![Carteirinha](/public/prints/carteirinha.png) |
-
----
-
 ## 🤝 Contribuição
 
 Este é um projeto acadêmico open-source. Sugestões e Pull Requests são bem-vindos!
