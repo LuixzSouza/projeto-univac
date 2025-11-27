@@ -29,7 +29,6 @@ export default function RootLayout({
             position="top-right"
             closeButton
             theme="system"
-            // 🔥 CORREÇÃO: Força o Toast a ficar na frente dos Modais
             style={{ zIndex: 99999 }} 
             toastOptions={{
               style: { zIndex: 99999 }

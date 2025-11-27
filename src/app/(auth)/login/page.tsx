@@ -2,15 +2,18 @@
 
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link' // ✨ Import do Link
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Loader2, Eye, EyeOff, Lock, Mail, Github, Chrome, QrCode, AlertTriangle, Smartphone, Info } from 'lucide-react'
+import { 
+  Loader2, Eye, EyeOff, Lock, Mail, Github, Chrome, QrCode, 
+  AlertTriangle, Smartphone, Info, ArrowLeft // ✨ Import do ArrowLeft
+} from 'lucide-react'
 import { toast } from 'sonner'
 import Image from 'next/image'
 
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
-import { logAction } from '@/lib/logger'
 
 // --- CONFIGURAÇÃO DO SLIDESHOW (Contexto Acadêmico) ---
 const SLIDES = [
@@ -46,6 +49,7 @@ export default function LoginPage() {
   const [senha, setSenha] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [rememberMe, setRememberMe] = useState(false)
   
   // Estados de UX
   const [currentSlide, setCurrentSlide] = useState(0)
@@ -72,7 +76,6 @@ export default function LoginPage() {
   }
 
   // --- HANDLER GENÉRICO PARA SIMULAÇÕES ---
-  // Isso garante que NENHUM clique fique sem resposta na apresentação
   const handleSimulatedAction = (featureName: string) => {
     toast.info(`Funcionalidade: ${featureName}`, {
         description: "Este recurso é uma demonstração visual para o projeto acadêmico.",
@@ -95,7 +98,7 @@ export default function LoginPage() {
       })
 
       if (result?.ok) {
-        logAction('LOGIN', 'Sistema', 'Usuário realizou login', email);
+        // logAction('LOGIN', 'Sistema', 'Usuário realizou login', email); // Descomente se tiver o logAction importado
         toast.success("Autenticação realizada!", { description: "Carregando painel..." })
         router.push('/dashboard')
       } else {
@@ -181,6 +184,14 @@ export default function LoginPage() {
       {/* --- COLUNA DIREITA (FORMULÁRIO INTERATIVO) --- */}
       <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative">
         
+        {/* ✨ BOTÃO DE VOLTAR (LINK PEQUENO) ✨ */}
+        <div className="absolute top-6 left-6 z-20">
+            <Link href="/" className="flex items-center gap-2 text-sm font-medium text-text-muted hover:text-primary transition-colors group">
+                <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
+                Voltar ao Início
+            </Link>
+        </div>
+
         {/* Elemento decorativo de fundo */}
         <div className="absolute top-0 right-0 -mt-20 -mr-20 w-80 h-80 bg-primary/5 rounded-full blur-3xl pointer-events-none"></div>
 
@@ -218,7 +229,7 @@ export default function LoginPage() {
                 <div className="space-y-4">
                     <Input
                         id="email"
-                        label="Email"
+                        label="Email Corporativo"
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
@@ -267,7 +278,12 @@ export default function LoginPage() {
 
                 <div className="flex items-center justify-between text-sm">
                     <label className="flex items-center cursor-pointer">
-                        <input type="checkbox" className="h-4 w-4 rounded border-border text-primary focus:ring-primary bg-bg-surface" />
+                        <input 
+                          type="checkbox" 
+                          checked={rememberMe}
+                          onChange={(e) => setRememberMe(e.target.checked)}
+                          className="h-4 w-4 rounded border-border text-primary focus:ring-primary bg-bg-surface" 
+                        />
                         <span className="ml-2 text-text-muted">Lembrar dispositivo</span>
                     </label>
                     <button 

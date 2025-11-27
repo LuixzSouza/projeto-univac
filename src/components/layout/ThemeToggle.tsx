@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useTheme } from 'next-themes'
 import { Sun, Moon } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
+import { motion, AnimatePresence } from 'framer-motion'
 
 export function ThemeToggle() {
   const [mounted, setMounted] = useState(false)
@@ -14,49 +14,62 @@ export function ThemeToggle() {
   }, [])
 
   if (!mounted) {
-    // Placeholder vazio do mesmo tamanho para evitar pulo visual
-    return <div className="h-9 w-9" />
+    return <div className="h-9 w-9" /> // Placeholder para evitar layout shift
   }
 
+  const isDark = resolvedTheme === 'dark'
+
   const toggleTheme = () => {
-    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')
+    setTheme(isDark ? 'light' : 'dark')
   }
 
   return (
-    <Button
-      variant="ghost" // Usa o fundo transparente que criamos
-      size="sm"
+    <motion.button
       onClick={toggleTheme}
-      className="relative h-9 w-9 rounded-full p-0 overflow-hidden group"
-      title="Alternar Tema (Claro/Escuro)"
+      className={`
+        relative flex h-9 w-9 items-center justify-center rounded-full 
+        border border-border shadow-sm 
+        transition-colors duration-300
+        focus:outline-none focus:ring-2 focus:ring-primary/50
+        ${isDark ? 'bg-slate-900 hover:bg-slate-800' : 'bg-white hover:bg-slate-50'}
+      `}
+      whileTap={{ scale: 0.9, rotate: 15 }} // Micro-interação ao clicar
+      whileHover={{ scale: 1.05 }}
+      aria-label="Alternar Tema"
+      title={isDark ? "Mudar para Modo Claro" : "Mudar para Modo Escuro"}
     >
-      {/* A Mágica da Animação CSS (Tailwind):
-         - O Sol começa visível (scale-100). No modo dark, ele roda e encolhe (scale-0).
-         - A Lua começa invisível (scale-0). No modo dark, ela roda e cresce (scale-100).
+      {/* AnimatePresence permite animar o componente que está SAINDO da tela.
+         mode="wait" garante que um sai antes do outro entrar.
       */}
+      <AnimatePresence mode="wait" initial={false}>
+        {isDark ? (
+          <motion.div
+            key="moon"
+            initial={{ scale: 0, rotate: -90, opacity: 0 }}
+            animate={{ scale: 1, rotate: 0, opacity: 1 }}
+            exit={{ scale: 0, rotate: 90, opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 15 }}
+          >
+            {/* A Lua usa a cor Primary (Verde) para conectar com a identidade do UniVac */}
+            <Moon size={18} className="text-primary fill-primary/20" />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="sun"
+            initial={{ scale: 0, rotate: 90, opacity: 0 }}
+            animate={{ scale: 1, rotate: 0, opacity: 1 }}
+            exit={{ scale: 0, rotate: -90, opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 15 }}
+          >
+            {/* O Sol usa Laranja/Amarelo para contraste */}
+            <Sun size={18} className="text-orange-500 fill-orange-500/20" />
+          </motion.div>
+        )}
+      </AnimatePresence>
       
-      {/* Ícone do Sol */}
-      <Sun 
-        className={`
-          h-[1.2rem] w-[1.2rem] 
-          transition-all duration-300 ease-in-out
-          ${resolvedTheme === 'dark' ? '-rotate-90 scale-0 opacity-0' : 'rotate-0 scale-100 opacity-100'}
-          text-yellow-500 
-        `} 
-      />
+      {/* Efeito de Brilho (Glow) atrás do botão */}
+      <div className={`absolute inset-0 rounded-full blur-md transition-opacity duration-500 ${isDark ? 'bg-primary/20 opacity-50' : 'bg-orange-400/20 opacity-0'}`} />
 
-      {/* Ícone da Lua (Posicionado em cima do Sol com absolute) */}
-      <Moon 
-        className={`
-          absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
-          h-[1.2rem] w-[1.2rem] 
-          transition-all duration-300 ease-in-out
-          ${resolvedTheme === 'dark' ? 'rotate-0 scale-100 opacity-100' : 'rotate-90 scale-0 opacity-0'}
-          text-primary
-        `} 
-      />
-      
-      <span className="sr-only">Alternar tema</span>
-    </Button>
+    </motion.button>
   )
 }

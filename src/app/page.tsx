@@ -9,6 +9,7 @@ import {
   Activity, Bell, Syringe, UserPlus, Zap, Play, X
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
+import Image from 'next/image'
 
 // --- DADOS DO PROJETO ---
 const PROJECT_METRICS = [
@@ -31,10 +32,10 @@ const FAQS = [
 ]
 
 const TEAM_MEMBERS = [
-    { name: 'Luiz Antônio de Souza', role: 'Dev Líder & Arquitetura Front-end', contribution: 'Integração completa, Design System, UX e Finalização do Back-end.', initials: 'LA', color: 'bg-green-600' },
-    { name: 'Renan Carlos', role: 'API Contributor', contribution: 'Rotas iniciais (Agendamento, Funcionários).', initials: 'RC', color: 'bg-blue-600' },
-    { name: 'William', role: 'API Contributor', contribution: 'Desenvolvimento das rotas de Vacinas e Lógica de Lotes.', initials: 'WL', color: 'bg-yellow-600' },
-    { name: 'Isabela', role: 'API Contributor', contribution: 'Suporte na definição inicial do Schema e Estrutura.', initials: 'IS', color: 'bg-pink-600' },
+    { name: 'Luiz Antônio de Souza', role: 'Dev Líder & Arquitetura Front-end', contribution: 'Integração completa, Design System, UX e Finalização do Back-end.', initials: 'LA', color: 'bg-green-600', foto:'Luiz.webp' },
+    { name: 'Renan Carlos', role: 'API Contributor', contribution: 'Desenvolvimento da rotas de Funcionários.', initials: 'RC', color: 'bg-blue-600', foto:'Renan.webp' },
+    { name: 'William', role: 'API Contributor', contribution: 'Desenvolvimento das rotas de Agendamento.', initials: 'WL', color: 'bg-yellow-600', foto:'William.webp' },
+    { name: 'Isabela', role: 'API Contributor', contribution: 'Suporte na definição de rotas de Vacinas e Lógica de Lotes.', initials: 'IS', color: 'bg-pink-600', foto: 'Isa.webp' },
 ];
 
 export default function LandingPage() {
@@ -77,7 +78,7 @@ export default function LandingPage() {
           </div>
           
           <div className="flex items-center gap-4">
-            <span className="text-xs font-mono text-slate-400 hidden sm:block border border-slate-200 px-2 py-1 rounded">v1.0.0-beta</span>
+            <span className="text-xs font-mono text-slate-400 hidden sm:block border border-slate-200 px-2 py-1 rounded">v1.2.0-beta</span>
             <Link href="/app-loading">
               <Button className="rounded-full bg-slate-900 text-white hover:bg-slate-800 px-6 shadow-lg hover:shadow-xl transition-all">
                 Acessar Demo
@@ -396,7 +397,7 @@ function SpotlightCard({ role, icon: Icon, title, desc, color }: any) {
     );
 }
 
-function TeamMemberCard({ name, role, contribution, initials, color, delay }: any) {
+function TeamMemberCard({ name, role, contribution, initials, color, delay, foto }: any) {
     return (
         <motion.div 
             initial={{ opacity: 0, y: 20 }}
@@ -405,12 +406,24 @@ function TeamMemberCard({ name, role, contribution, initials, color, delay }: an
             transition={{ delay, duration: 0.5 }}
             className="flex flex-col items-center p-4 bg-white rounded-xl shadow-md border border-slate-100 h-full"
         >
-            <div className={`h-16 w-16 rounded-full ${color} text-white font-bold text-xl flex items-center justify-center mb-3 shadow-lg`}>
-                {initials}
+            <div className={`h-16 w-16 rounded-full overflow-hidden ${color} text-white font-bold text-xl flex items-center justify-center mb-3 shadow-lg`}>
+                {foto ? (
+                    <Image 
+                        src={`/equipe/${foto}`} 
+                        width={64} 
+                        height={64} 
+                        alt={initials} 
+                    />
+                ) : (
+                    <span className="text-white text-xl">
+                        {initials}
+                    </span>
+                )}
             </div>
+
             <h3 className="font-bold text-base text-slate-900 text-center">{name}</h3>
             <p className="text-xs font-semibold text-slate-500 mb-2">{role}</p>
-            <p className="text-[11px] text-slate-600 italic text-center leading-snug">{contribution}</p>
+            <p className="text-[11px] text-slate-600 italic text-center leading-snug max-w-36">{contribution}</p>
         </motion.div>
     )
 }

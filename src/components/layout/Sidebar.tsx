@@ -89,7 +89,7 @@ export function Sidebar() {
       {/* Botão Flutuante Mobile (Hamburger) */}
       <button
         onClick={() => setIsMobileOpen(true)}
-        className="fixed bottom-6 right-6 z-50 p-3 rounded-full bg-primary text-white lg:hidden shadow-lg hover:bg-primary/90 transition-colors"
+        className="fixed bottom-24 right-7 z-50 p-3 rounded-full bg-primary text-white lg:hidden shadow-lg hover:bg-primary/90 transition-colors"
         aria-label="Abrir Menu"
         disabled={isNavigating} // Bloqueia durante a navegação
       >

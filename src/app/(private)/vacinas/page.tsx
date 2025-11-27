@@ -1,12 +1,13 @@
 'use client'
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import Link from 'next/link' // ✨ CORREÇÃO: Importamos o Link
+import Link from 'next/link' // Import necessário para o Card de Detalhes
+import { useSession } from 'next-auth/react' // Para RBAC
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import { ConfirmationModal } from '@/components/ui/ConfirmationModal'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Syringe, Plus, CheckSquare, History, Filter as FilterIcon, Search, X, Package } from 'lucide-react'
+import { Syringe, Plus, CheckSquare, History, Filter as FilterIcon, Search, X, Package, Loader2 } from 'lucide-react'
 
 import VacinaTable from '@/components/features/vacinas/VacinaTable'
 import { VacinaForm } from '@/components/features/vacinas/VacinaForm'
@@ -15,8 +16,8 @@ import { RegistroAplicacaoForm } from '@/components/features/vacinas/RegistroApl
 import { PaginationControls } from '@/components/ui/PaginationControls' 
 
 import { toast } from 'sonner'
+import { logAction } from '@/lib/logger' // Auditoria
 
-// Interface correta
 export interface IVacina {
   id: number
   nome: string
@@ -24,7 +25,6 @@ export interface IVacina {
   obrigatoriedade: boolean
 }
 
-// Interface para funcionários (necessária para o modal de registro)
 interface IFuncionarioSimples {
   id: number;
   nome: string;
@@ -34,9 +34,14 @@ interface IFuncionarioSimples {
 type Tab = 'tipos' | 'historico'; 
 
 export default function VacinasPage() {
+  const { data: session } = useSession()
+  const userRole = (session?.user as any)?.role || 'FUNCIONARIO'
+  const isAdmin = userRole === 'ADMIN'
+
   const [activeTab, setActiveTab] = useState<Tab>('tipos')
   
   const [filtroTipos, setFiltroTipos] = useState('')
+  const [isSearching, setIsSearching] = useState(false) // Loading da busca
   const [filtroHistorico, setFiltroHistorico] = useState('')
 
   const [currentPageTipos, setCurrentPageTipos] = useState(1);
@@ -57,14 +62,15 @@ export default function VacinasPage() {
   const [funcionarios, setFuncionarios] = useState<IFuncionarioSimples[]>([])
   const [aplicacoes, setAplicacoes] = useState<IAplicacaoHist[]>([]) 
 
-  // --- BUSCAR DADOS REAIS (GET) ---
+  // --- BUSCAR DADOS ---
   const fetchData = useCallback(async () => {
     try {
-      setIsLoading(true)
+      if (tiposVacinas.length === 0) setIsLoading(true)
+      
       const [resVacinas, resFunc, resApps] = await Promise.all([
         fetch('/api/vacinas'),
         fetch('/api/funcionarios'),
-        fetch('/api/dashboard') // Usamos dashboard para pegar histórico recente por enquanto
+        fetch('/api/dashboard')
       ])
 
       if (resVacinas.ok) setTiposVacinas(await resVacinas.json())
@@ -72,7 +78,6 @@ export default function VacinasPage() {
       
       if (resApps.ok) {
            const dashData = await resApps.json()
-           // Mapeia o retorno do dashboard para a tabela de histórico
            const appsFormatadas = dashData.aplicacoes.map((app: any) => ({
               id: app.id,
               funcionarioNome: app.funcionario.nome,
@@ -90,13 +95,24 @@ export default function VacinasPage() {
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [tiposVacinas.length])
 
   useEffect(() => {
     fetchData()
   }, [fetchData])
 
-  // --- LÓGICA DE FILTROS ---
+  // --- FILTROS E BUSCA ---
+  const handleFiltroTiposChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const val = e.target.value;
+      setFiltroTipos(val);
+      setCurrentPageTipos(1);
+      
+      if(val) {
+          setIsSearching(true);
+          setTimeout(() => setIsSearching(false), 500);
+      }
+  }
+
   const tiposVacinasFiltrados = useMemo(() => {
     if (!filtroTipos) return tiposVacinas;
     const lowerFilter = filtroTipos.toLowerCase();
@@ -120,52 +136,70 @@ export default function VacinasPage() {
     const firstItemIndex = (currentPageTipos - 1) * itemsPerPage;
     return tiposVacinasFiltrados.slice(firstItemIndex, firstItemIndex + itemsPerPage);
   }, [tiposVacinasFiltrados, currentPageTipos, itemsPerPage]);
-  const totalPagesTipos = Math.ceil(tiposVacinasFiltrados.length / itemsPerPage);
-
+  
   const aplicacoesPaginadas = useMemo(() => {
     const firstItemIndex = (currentPageHistorico - 1) * itemsPerPage;
     return aplicacoesFiltradas.slice(firstItemIndex, firstItemIndex + itemsPerPage);
   }, [aplicacoesFiltradas, currentPageHistorico, itemsPerPage]);
-  const totalPagesHistorico = Math.ceil(aplicacoesFiltradas.length / itemsPerPage);
 
   // --- HANDLERS ---
-  const handleOpenAddTipoModal = () => { setTipoVacinaEmEdicao(null); setIsTipoFormModalOpen(true); };
-  const handleOpenEditTipoModal = (vacina: IVacina) => { setTipoVacinaEmEdicao(vacina); setIsTipoFormModalOpen(true); };
-  const handleCloseTipoFormModal = () => { setIsTipoFormModalOpen(false); setTimeout(() => setTipoVacinaEmEdicao(null), 300); };
+  const handleOpenAddTipoModal = () => { 
+      if (!isAdmin) return toast.error("Ação restrita a Administradores.");
+      setTipoVacinaEmEdicao(null); setIsTipoFormModalOpen(true); 
+  };
   
-  const handleSuccessForm = async () => {
-     await fetchData(); // Recarrega tudo
-  }
+  const handleOpenEditTipoModal = (vacina: IVacina) => { 
+      if (!isAdmin) return toast.error("Ação restrita a Administradores.");
+      setTipoVacinaEmEdicao(vacina); setIsTipoFormModalOpen(true); 
+  };
+  
+  const handleOpenDeleteTipoModal = (vacina: IVacina) => { 
+      if (!isAdmin) return toast.error("Ação restrita a Administradores.");
+      setTipoVacinaParaExcluir(vacina); setIsTipoDeleteModalOpen(true); 
+  };
 
-  const handleOpenDeleteTipoModal = (vacina: IVacina) => { setTipoVacinaParaExcluir(vacina); setIsTipoDeleteModalOpen(true); };
+  const handleCloseTipoFormModal = () => { setIsTipoFormModalOpen(false); setTimeout(() => setTipoVacinaEmEdicao(null), 300); };
   const handleCloseDeleteTipoModal = () => { setIsTipoDeleteModalOpen(false); setTimeout(() => setTipoVacinaParaExcluir(null), 300); };
   
+  const handleSuccessForm = async () => { await fetchData(); }
+
   const handleConfirmDeleteTipo = async () => {
     if (!tipoVacinaParaExcluir || !tipoVacinaParaExcluir.id) return;
 
     try {
+      const toastId = toast.loading("Excluindo vacina...")
       const res = await fetch(`/api/vacinas/${tipoVacinaParaExcluir.id}`, { method: 'DELETE' })
-      if (!res.ok) throw new Error();
+      
+      if (!res.ok) {
+          toast.dismiss(toastId);
+          toast.error("Não é possível excluir esta vacina pois ela possui histórico de uso.");
+          return;
+      }
 
+      // ✅ Auditoria
+      await logAction(
+          "EXCLUSAO", 
+          "Catálogo Vacina", 
+          `Excluiu o tipo de vacina: ${tipoVacinaParaExcluir.nome}`, 
+          session?.user?.email || "Admin"
+      );
+
+      toast.dismiss(toastId)
       toast.success(`Vacina "${tipoVacinaParaExcluir.nome}" excluída!`)
       await fetchData();
       handleCloseDeleteTipoModal();
     } catch (error) {
-      toast.error("Não é possível excluir esta vacina (possui registros vinculados).")
+      toast.error("Erro de conexão.")
     }
   };
 
   const handleRegisterSuccess = async () => {
-      await fetchData(); // Atualiza o histórico
+      await fetchData(); 
       setIsRegistroModalOpen(false);
   }
 
   if (isLoading && tiposVacinas.length === 0) {
-    return (
-      <div className="flex h-full min-h-[50vh] items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-border border-t-primary"></div>
-      </div>
-    )
+    return <div className="flex h-full min-h-[50vh] items-center justify-center"><div className="h-8 w-8 animate-spin rounded-full border-4 border-border border-t-primary"></div></div>
   }
 
   const tabContentVariants = {
@@ -175,7 +209,7 @@ export default function VacinasPage() {
   };
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6 pb-20">
 
       <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
         <h1 className="text-3xl font-bold text-text-base">Centro de Vacinação</h1>
@@ -183,84 +217,57 @@ export default function VacinasPage() {
           <Button onClick={() => setIsRegistroModalOpen(true)} variant="secondary" className="flex items-center justify-center gap-2 md:justify-start">
             <CheckSquare size={18} /> Registrar Aplicação
           </Button>
-          <Button onClick={handleOpenAddTipoModal} className="flex items-center justify-center gap-2 md:justify-start">
-            <Plus size={18} /> Adicionar Tipo de Vacina
-          </Button>
+          
+          {/* Botão apenas para Admin */}
+          {isAdmin && (
+              <Button onClick={handleOpenAddTipoModal} className="flex items-center justify-center gap-2 md:justify-start">
+                <Plus size={18} /> Adicionar Tipo de Vacina
+              </Button>
+          )}
         </div>
       </div>
 
       <div className="border-b border-border">
         <nav className="-mb-px flex space-x-6" aria-label="Tabs">
-          {/* Aba Tipos de Vacina */}
-          <button 
-            onClick={() => setActiveTab('tipos')} 
-            className={`flex items-center gap-2 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors cursor-pointer ${ 
-              activeTab === 'tipos' ? 'border-primary text-primary' : 'border-transparent text-text-muted hover:text-text-base hover:border-border' 
-            }`} 
-          >
-            <Syringe size={16} /> <span className="hidden sm:inline">Tipos de Vacina</span> <span className="sm:hidden">Vacinas</span>
-            <span className={`ml-1 rounded-full px-2 py-0.5 text-xs font-medium ${
-              activeTab === 'tipos' ? 'bg-primary/10 text-primary' : 'bg-border text-text-muted'
-            }`}> {tiposVacinas.length} </span>
+          <button onClick={() => setActiveTab('tipos')} className={`flex items-center gap-2 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors cursor-pointer ${ activeTab === 'tipos' ? 'border-primary text-primary' : 'border-transparent text-text-muted hover:text-text-base hover:border-border' }`} >
+            <Syringe size={16} /> <span className="hidden sm:inline">Catálogo</span>
+            <span className={`ml-1 rounded-full px-2 py-0.5 text-xs font-medium ${activeTab === 'tipos' ? 'bg-primary/10 text-primary' : 'bg-border text-text-muted'}`}> {tiposVacinas.length} </span>
           </button>
 
-          {/* Aba Histórico de Aplicações */}
-          <button 
-            onClick={() => setActiveTab('historico')} 
-            className={`flex items-center gap-2 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors cursor-pointer ${ 
-              activeTab === 'historico' ? 'border-primary text-primary' : 'border-transparent text-text-muted hover:text-text-base hover:border-border' 
-            }`} 
-          >
-            <History size={16} /> <span className="hidden sm:inline">Histórico de Aplicações</span> <span className="sm:hidden">Histórico</span>
-            <span className={`ml-1 rounded-full px-2 py-0.5 text-xs font-medium ${
-              activeTab === 'historico' ? 'bg-primary/10 text-primary' : 'bg-border text-text-muted'
-            }`}> {aplicacoes.length} </span>
+          <button onClick={() => setActiveTab('historico')} className={`flex items-center gap-2 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors cursor-pointer ${ activeTab === 'historico' ? 'border-primary text-primary' : 'border-transparent text-text-muted hover:text-text-base hover:border-border' }`} >
+            <History size={16} /> <span className="hidden sm:inline">Histórico</span>
+            <span className={`ml-1 rounded-full px-2 py-0.5 text-xs font-medium ${activeTab === 'historico' ? 'bg-primary/10 text-primary' : 'bg-border text-text-muted'}`}> {aplicacoes.length} </span>
           </button>
         </nav>
       </div>
 
-      <div className="rounded-lg bg-bg-surface p-6 shadow-md min-h-[450px]">
+      <div className="rounded-lg bg-bg-surface p-6 shadow-md border border-border min-h-[450px]">
         <AnimatePresence mode="wait">
           
           {/* --- CONTEÚDO ABA: TIPOS --- */}
           {activeTab === 'tipos' && (
             <motion.div key="tipos" variants={tabContentVariants} initial="hidden" animate="visible" exit="exit" className="space-y-4">
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                
-                {/* Search Bar */}
                 <div className='relative flex-grow md:max-w-xs'>
-                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"> <Search size={16} className='text-text-muted'/> </div>
+                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"> 
+                     {isSearching ? <Loader2 size={16} className="text-primary animate-spin"/> : <Search size={16} className='text-text-muted'/>}
+                  </div>
                   <input 
-                    type="text" 
-                    placeholder="Filtrar tipos..." 
-                    value={filtroTipos} 
-                    onChange={(e) => { setFiltroTipos(e.target.value); setCurrentPageTipos(1); }} 
+                    type="text" placeholder="Filtrar tipos..." value={filtroTipos} onChange={handleFiltroTiposChange} 
                     className="w-full rounded border border-border bg-bg-base py-2 pl-9 pr-3 text-sm text-text-base placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50"
                   />
                 </div>
-                
                 <div className="flex items-center gap-4">
-                  {/* Botão de Limpar Filtro */}
                   {filtroTipos && (
-                    <Button 
-                      variant="ghost" 
-                      onClick={() => setFiltroTipos('')}
-                      className="h-8 px-2 text-xs text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 border-transparent shadow-none bg-transparent"
-                    >
-                      <X size={14} className="mr-1" /> Limpar Filtro
+                    <Button variant="ghost" onClick={() => setFiltroTipos('')} className="h-8 px-2 text-xs text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 border-transparent shadow-none bg-transparent">
+                      <X size={14} className="mr-1" /> Limpar
                     </Button>
                   )}
-                  
-                  <p className="flex-shrink-0 text-sm text-text-muted">
-                    {tiposVacinasFiltrados.length} {tiposVacinasFiltrados.length === 1 ? 'tipo encontrado' : 'tipos encontrados'}
-                  </p>
+                  <p className="flex-shrink-0 text-sm text-text-muted">{tiposVacinasFiltrados.length} tipos</p>
                 </div>
               </div>
 
-              {/* ✨ NOVIDADE: Card de Detalhe quando apenas 1 resultado */}
-              {filtroTipos && tiposVacinasFiltrados.length === 1 && (
-                  <VacinaDetailCard vacina={tiposVacinasFiltrados[0]} />
-              )}
+              {filtroTipos && tiposVacinasFiltrados.length === 1 && <VacinaDetailCard vacina={tiposVacinasFiltrados[0]} />}
 
               {tiposVacinasFiltrados.length > 0 ? (
                 <>
@@ -268,20 +275,12 @@ export default function VacinasPage() {
                     data={tiposPaginados} 
                     onEdit={handleOpenEditTipoModal} 
                     onDelete={handleOpenDeleteTipoModal} 
+                    userRole={userRole} // ✨ Passando o role
                   />
-                  <PaginationControls
-                    currentPage={currentPageTipos}
-                    totalPages={totalPagesTipos}
-                    onPageChange={setCurrentPageTipos}
-                    itemsPerPage={itemsPerPage}
-                    totalItems={tiposVacinasFiltrados.length}
-                  />
+                  <PaginationControls currentPage={currentPageTipos} totalPages={Math.ceil(tiposVacinasFiltrados.length / itemsPerPage)} onPageChange={setCurrentPageTipos} itemsPerPage={itemsPerPage} totalItems={tiposVacinasFiltrados.length} />
                 </>
               ) : (
-                <div className="text-center py-10 text-text-muted flex flex-col items-center">
-                  <FilterIcon size={32} className="mb-2 opacity-50"/>
-                  <span>Nenhum tipo de vacina encontrado{filtroTipos ? ` para "${filtroTipos}"` : ''}.</span>
-                </div>
+                <div className="text-center py-10 text-text-muted flex flex-col items-center"><FilterIcon size={32} className="mb-2 opacity-50"/><span>Nenhum tipo encontrado.</span></div>
               )}
             </motion.div>
           )}
@@ -292,92 +291,48 @@ export default function VacinasPage() {
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div className='relative flex-grow md:max-w-xs'>
                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"> <Search size={16} className='text-text-muted'/> </div>
-                    <input 
-                      type="text" 
-                      placeholder="Filtrar histórico..." 
-                      value={filtroHistorico} 
-                      onChange={(e) => { setFiltroHistorico(e.target.value); setCurrentPageHistorico(1); }} 
-                      className="w-full rounded border border-border bg-bg-base py-2 pl-9 pr-3 text-sm text-text-base placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50"
-                    />
+                    <input type="text" placeholder="Filtrar histórico..." value={filtroHistorico} onChange={(e) => setFiltroHistorico(e.target.value)} className="w-full rounded border border-border bg-bg-base py-2 pl-9 pr-3 text-sm text-text-base placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50" />
                   </div>
-                  <p className="flex-shrink-0 text-sm text-text-muted">
-                    {aplicacoesFiltradas.length} {aplicacoesFiltradas.length === 1 ? 'aplicação encontrada' : 'aplicações encontradas'}
-                  </p>
                 </div>
                 {aplicacoesFiltradas.length > 0 ? (
                   <>
                     <HistoricoAplicacoesTable aplicacoes={aplicacoesPaginadas} />
-                    <PaginationControls
-                      currentPage={currentPageHistorico}
-                      totalPages={totalPagesHistorico}
-                      onPageChange={setCurrentPageHistorico}
-                      itemsPerPage={itemsPerPage}
-                      totalItems={aplicacoesFiltradas.length}
-                    />
+                    <PaginationControls currentPage={currentPageHistorico} totalPages={Math.ceil(aplicacoesFiltradas.length / itemsPerPage)} onPageChange={setCurrentPageHistorico} itemsPerPage={itemsPerPage} totalItems={aplicacoesFiltradas.length} />
                   </>
                 ) : (
-                  <div className="text-center py-10 text-text-muted flex flex-col items-center">
-                    <FilterIcon size={32} className="mb-2 opacity-50"/>
-                    <span>Nenhum registro encontrado{filtroHistorico ? ` para "${filtroHistorico}"` : ''}.</span>
-                  </div>
+                  <div className="text-center py-10 text-text-muted flex flex-col items-center"><FilterIcon size={32} className="mb-2 opacity-50"/><span>Nenhum registro encontrado.</span></div>
                 )}
             </motion.div>
           )}
         </AnimatePresence>
       </div>
 
-      {/* --- Modais --- */}
       <AnimatePresence>
-        {/* Modal de Adicionar/Editar Tipo de Vacina */}
-        {isTipoFormModalOpen && ( <Modal isOpen={isTipoFormModalOpen} onClose={handleCloseTipoFormModal} title={tipoVacinaEmEdicao ? 'Editar Tipo de Vacina' : 'Novo Tipo'}> <VacinaForm onClose={handleCloseTipoFormModal} vacinaParaEditar={tipoVacinaEmEdicao} onSuccess={handleSuccessForm} /> </Modal> )}
-
-        {/* Modal de Confirmação de Exclusão */}
-        {isTipoDeleteModalOpen && ( <ConfirmationModal isOpen={isTipoDeleteModalOpen} onClose={handleCloseDeleteTipoModal} onConfirm={handleConfirmDeleteTipo} title="Excluir Tipo" message={`Tem a certeza que deseja excluir "${tipoVacinaParaExcluir?.nome}"?`} /> )}
-
-        {/* Modal de Registro de Aplicação */}
-        {isRegistroModalOpen && ( 
-          <Modal isOpen={isRegistroModalOpen} onClose={() => setIsRegistroModalOpen(false)} title="Registrar Aplicação de Vacina"> 
-              <RegistroAplicacaoForm funcionarios={funcionarios} vacinas={tiposVacinas} onRegister={handleRegisterSuccess} /> 
-          </Modal>
-        )}
+        {isTipoFormModalOpen && ( <Modal isOpen={isTipoFormModalOpen} onClose={handleCloseTipoFormModal} title={tipoVacinaEmEdicao ? 'Editar Vacina' : 'Nova Vacina'}> <VacinaForm onClose={handleCloseTipoFormModal} vacinaParaEditar={tipoVacinaEmEdicao} onSuccess={handleSuccessForm} /> </Modal> )}
+        {isTipoDeleteModalOpen && ( <ConfirmationModal isOpen={isTipoDeleteModalOpen} onClose={handleCloseDeleteTipoModal} onConfirm={handleConfirmDeleteTipo} title="Excluir Tipo" message={`Deseja excluir "${tipoVacinaParaExcluir?.nome}"?`} /> )}
+        {isRegistroModalOpen && ( <Modal isOpen={isRegistroModalOpen} onClose={() => setIsRegistroModalOpen(false)} title="Registrar Aplicação"> <RegistroAplicacaoForm funcionarios={funcionarios} vacinas={tiposVacinas} onRegister={handleRegisterSuccess} /> </Modal> )}
       </AnimatePresence>
 
     </motion.div>
   )
 }
 
-// --- NOVO SUB-COMPONENTE: Card de Detalhes (Quando apenas 1 item é filtrado) ---
-interface VacinaDetailCardProps {
-    vacina: IVacina;
-}
-function VacinaDetailCard({ vacina }: VacinaDetailCardProps) {
+// Sub-componente Card Detalhes
+function VacinaDetailCard({ vacina }: { vacina: IVacina }) {
     return (
-        <motion.div 
-            initial={{ opacity: 0, y: -10 }} 
-            animate={{ opacity: 1, y: 0 }} 
-            className="mb-4 rounded-lg border-2 border-primary/50 bg-bg-base p-4 shadow-md flex justify-between items-center"
-        >
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-4 rounded-lg border border-primary/30 bg-primary/5 p-4 shadow-sm flex justify-between items-center">
             <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                    <Syringe size={24} />
-                </div>
+                <div className="h-10 w-10 rounded-full bg-primary text-white flex items-center justify-center shrink-0"><Syringe size={20} /></div>
                 <div>
-                    <h3 className="text-lg font-bold text-text-base">
+                    <h3 className="text-lg font-bold text-text-base flex items-center gap-2">
                         {vacina.nome}
-                        <span className={`ml-3 px-2 py-0.5 rounded-full text-xs font-semibold border ${vacina.obrigatoriedade ? 'bg-red-100 text-red-700 border-red-200' : 'bg-green-100 text-green-700 border-green-200'}`}>
-                            {vacina.obrigatoriedade ? 'Obrigatória' : 'Opcional'}
-                        </span>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wider ${vacina.obrigatoriedade ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>{vacina.obrigatoriedade ? 'Obrigatória' : 'Opcional'}</span>
                     </h3>
-                    <p className="text-sm text-text-muted mt-1">{vacina.descricao}</p>
+                    <p className="text-sm text-text-muted">{vacina.descricao}</p>
                 </div>
             </div>
-            
-            {/* Link Rápido para a Gestão de Estoque */}
-            <Link href="/estoque" title="Ver Lotes e Validade">
-                <Button variant="secondary" size="sm" className="flex items-center gap-2">
-                    <Package size={18} className="text-text-muted"/> 
-                    Estoque
-                </Button>
+            <Link href="/estoque">
+                <Button variant="secondary" size="sm" className="flex items-center gap-2"><Package size={16}/> Ver Estoque</Button>
             </Link>
         </motion.div>
     );
