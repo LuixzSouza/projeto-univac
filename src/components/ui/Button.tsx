@@ -5,7 +5,6 @@ const variants = {
   primary: 'bg-primary text-white hover:bg-primary-dark dark:hover:bg-primary-light',
   secondary: 'bg-border text-text-base hover:bg-border/80 dark:hover:bg-border/70',
   danger: 'bg-red-600 text-white hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600',
-  // ✅ NOVA VARIANTE ADICIONADA:
   ghost: 'bg-transparent text-text-muted hover:text-text-base hover:bg-border/30 dark:hover:bg-border/20 shadow-none',
 }
 
@@ -16,7 +15,6 @@ const sizes = {
 }
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  // O TypeScript vai ler automaticamente as chaves de 'variants', incluindo 'ghost'
   variant?: keyof typeof variants
   size?: keyof typeof sizes
 }

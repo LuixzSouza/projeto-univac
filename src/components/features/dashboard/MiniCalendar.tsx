@@ -8,12 +8,12 @@ export function MiniCalendar() {
   const inicioMes = startOfMonth(hoje);
   const diaSemanaInicio = getDay(inicioMes); 
 
-  // Mudei para 42 (6 semanas) para garantir que meses longos que começam no sábado não sejam cortados
+  //  42 (6 semanas) para garantir que meses longos que começam no sábado não sejam cortados
   const dias = Array.from({ length: 42 }).map((_, index) => {
     const offset = index - diaSemanaInicio;
     const diaAtual = addDays(inicioMes, offset);
     return {
-      dateObj: diaAtual, // Guardamos o objeto data completo para chave única
+      dateObj: diaAtual, 
       numero: getDate(diaAtual),
       isHoje: isToday(diaAtual),
       isOutroMes: diaAtual.getMonth() !== hoje.getMonth(),
@@ -37,7 +37,7 @@ export function MiniCalendar() {
       <div className="grid grid-cols-7 gap-1">
         {dias.map((dia, index) => (
           <div
-            key={dia.dateObj.toISOString()} // Chave única baseada na data
+            key={dia.dateObj.toISOString()} 
             className={`
               flex h-7 w-7 items-center justify-center rounded-full text-[10px] sm:text-xs transition-colors
               ${dia.isHoje 

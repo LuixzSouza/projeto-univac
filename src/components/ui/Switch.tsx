@@ -5,8 +5,8 @@ import { Switch as HeadlessSwitch } from '@headlessui/react'
 interface SwitchProps {
   enabled: boolean
   onChange: (enabled: boolean) => void
-  label?: string // ✨ Label visual
-  srLabel?: string // Label para leitores de tela (Acessibilidade)
+  label?: string 
+  srLabel?: string 
   disabled?: boolean
 }
 
@@ -34,7 +34,6 @@ export function Switch({ enabled, onChange, label, srLabel, disabled = false }: 
             />
         </HeadlessSwitch>
         
-        {/* Label Clicável ao lado */}
         {label && (
             <HeadlessSwitch.Label className={`text-sm font-medium cursor-pointer ${disabled ? 'text-text-muted' : 'text-text-base'}`}>
                 {label}

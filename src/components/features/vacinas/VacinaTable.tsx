@@ -13,7 +13,7 @@ interface VacinaTableProps {
   data: IVacina[]
   onEdit: (vacina: IVacina) => void
   onDelete: (vacina: IVacina) => void
-  userRole: string // ✨ Nova prop para controle de acesso
+  userRole: string 
 }
 
 export default function VacinaTable({ data, onEdit, onDelete, userRole }: VacinaTableProps) {
@@ -28,7 +28,7 @@ export default function VacinaTable({ data, onEdit, onDelete, userRole }: Vacina
               <th className="px-6 py-3">Nome da Vacina</th>
               <th className="px-6 py-3">Descrição</th>
               <th className="px-6 py-3 text-center">Tipo</th>
-              {/* ✨ Só mostra cabeçalho de ações se for Admin */}
+              {/* Só mostra cabeçalho de ações se for Admin */}
               {isAdmin && <th className="px-6 py-3 text-right">Ações</th>}
             </tr>
           </thead>
@@ -59,7 +59,7 @@ export default function VacinaTable({ data, onEdit, onDelete, userRole }: Vacina
                   </span>
                 </td>
                 
-                {/* ✨ Só mostra botões se for Admin */}
+                {/* Só mostra botões se for Admin */}
                 {isAdmin && (
                     <td className="px-6 py-4 text-right space-x-2">
                     <button

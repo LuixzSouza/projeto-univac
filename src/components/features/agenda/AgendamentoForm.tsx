@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/Button'
 import { Loader2, CheckCircle, Trash2, AlertTriangle } from 'lucide-react' // Novos ícones
 import { toast } from 'sonner'
 
-// Interfaces Locais
 interface IFuncionario { id: number; nome: string; status: boolean }
 interface IVacina { id: number; nome: string }
 
@@ -109,7 +108,7 @@ export function AgendamentoForm({
     }
   }
 
-  // ✨ NOVA FUNÇÃO: CANCELAR AGENDAMENTO
+  // CANCELAR AGENDAMENTO
   const handleDelete = async () => {
       if (!confirm("Tem certeza que deseja cancelar este agendamento?")) return;
       
@@ -153,7 +152,7 @@ export function AgendamentoForm({
       <div className="flex flex-col sm:flex-row justify-between items-center pt-4 border-t border-border mt-6 gap-4">
         
         <div className="flex gap-2 w-full sm:w-auto">
-            {/* ✨ Botão de Check-in */}
+            {/* Botão de Check-in */}
             {modoEdicao && agendamentoParaEditar?.status !== 'Concluído' && onCheckIn && (
                 <Button 
                     type="button" 
@@ -166,11 +165,11 @@ export function AgendamentoForm({
                 </Button>
             )}
             
-            {/* ✨ Botão de Excluir (Novo) */}
+            {/* Botão de Excluir */}
             {modoEdicao && (
                 <Button
                     type="button"
-                    variant="danger" // Assumindo que você tem variant='danger' no Button
+                    variant="danger" 
                     onClick={handleDelete}
                     disabled={isLoading || isDeleting}
                     className="flex items-center justify-center"

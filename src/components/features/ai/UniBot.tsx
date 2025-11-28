@@ -6,9 +6,8 @@ import {
   MessageSquare, X, Send, Bot, MinusCircle, Loader2, Trash2, Download, Upload, Volume2, VolumeX
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { toast } from 'sonner' // Feedback visual
+import { toast } from 'sonner' 
 
-// ----- Tipagem
 type Message = {
   id: string
   text: string
@@ -16,7 +15,6 @@ type Message = {
   timestamp: string 
 }
 
-// ----- Base de conhecimento
 const KNOWLEDGE_BASE: Record<string, string> = {
   senha:
     'Para alterar sua senha, vá até o menu "Meu Perfil" > "Segurança". Se esqueceu a senha, contate o administrador.',
@@ -33,7 +31,6 @@ const KNOWLEDGE_BASE: Record<string, string> = {
 
 const SUGGESTIONS = ['vacina', 'agenda', 'estoque', 'senha']
 
-// ----- Utilitários
 const nowISO = () => new Date().toISOString()
 const shortTime = (iso: string) => new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 
@@ -50,9 +47,7 @@ export function UniBot() {
   const [isMinimized, setIsMinimized] = useState(false)
   const [input, setInput] = useState('')
   
-  // Estado inicial
   const [messages, setMessages] = useState<Message[]>([])
-  
   const [isTyping, setIsTyping] = useState(false)
   const [speechEnabled, setSpeechEnabled] = useState(false)
   const [position, setPosition] = useState({ right: 24, bottom: 24 })
@@ -83,15 +78,15 @@ export function UniBot() {
     }
   }, [messages, isTyping, isOpen]) // Adicionei dependências para garantir o scroll
 
-  // --- FUNÇÕES QUE FALTAVAM (CORREÇÃO) ---
+  // --- FUNÇÕES QUE FALTAVAM  ---
 
-  // 1. Limpar Conversa
+  // Limpar Conversa
   const clearChat = () => {
       setMessages([{ id: 'welcome', text: 'Olá! Sou o UniBot 🤖. Como posso ajudar?', sender: 'bot', timestamp: nowISO() }])
       toast.success("Histórico de conversa limpo.")
   }
 
-  // 2. Exportar JSON
+  // Exportar JSON
   const exportChat = () => {
       if (messages.length <= 1) return toast.info("Nada para exportar ainda.");
       
@@ -107,7 +102,7 @@ export function UniBot() {
       toast.success("Backup da conversa salvo!")
   }
 
-  // 3. Importar JSON
+  // Importar JSON
   const importChat = (file?: File) => {
       if (!file) return;
       const reader = new FileReader()

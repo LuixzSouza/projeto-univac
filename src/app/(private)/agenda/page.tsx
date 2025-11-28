@@ -39,7 +39,7 @@ export default function AgendaPage() {
   const [currentPageHistorico, setCurrentPageHistorico] = useState(1);
   const [itemsPerPage] = useState(5);
 
-  // --- 1. BUSCAR DADOS DA API ---
+  // --- BUSCAR DADOS DA API ---
   const carregarDados = useCallback(async () => {
     try {
       const [resAgend, resFunc, resVac] = await Promise.all([
@@ -77,7 +77,7 @@ export default function AgendaPage() {
     carregarDados()
   }, [carregarDados])
 
-  // --- 2. LÓGICA DA TABELA INFERIOR ---
+  // --- LÓGICA DA TABELA ---
   const listaHistorico = useMemo(() => {
     return eventosCalendario.map(ev => ({
         id: ev.id,

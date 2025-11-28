@@ -3,7 +3,6 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/Table'
 import { AlertTriangle, CheckCircle } from 'lucide-react'
 
-// Interfaces locais para independência do mock
 interface VacinaSimples {
   id: number
   nome: string
@@ -26,7 +25,6 @@ function verificarStatusObrigatorio(func: FuncionarioComAplicacoes, vacinasObrig
 
   const idsVacinasTomadas = func.aplicacoes.map(app => app.vacinaId);
   
-  // Filtra quais vacinas obrigatórias NÃO estão na lista de tomadas
   const vacinasFaltantes = vacinasObrigatorias.filter(obrigatoria => !idsVacinasTomadas.includes(obrigatoria.id));
   
   const emDia = vacinasFaltantes.length === 0;
@@ -38,7 +36,6 @@ function verificarStatusObrigatorio(func: FuncionarioComAplicacoes, vacinasObrig
 }
 
 export function TabelaStatusObrigatorio({ funcionarios, vacinasObrigatorias }: TabelaStatusObrigatorioProps) {
-  // Pegamos apenas os primeiros 5 para não lotar o dashboard
   const listaExibicao = funcionarios.slice(0, 5);
 
   return (

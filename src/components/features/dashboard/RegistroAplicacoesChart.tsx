@@ -16,7 +16,7 @@ export function RegistroAplicacoesChart({ aplicacoes }: RegistroAplicacoesChartP
   
   // Processamento dos dados reais
   const { labels, dataValues, hojeCount } = useMemo(() => {
-    // 1. Agrupar contagem por dia (formato dd/MM)
+    // Agrupar contagem por dia (formato dd/MM)
     const agrupado: Record<string, number> = {};
     const hojeStr = format(new Date(), 'dd/MM', { locale: ptBR });
 
@@ -26,8 +26,7 @@ export function RegistroAplicacoesChart({ aplicacoes }: RegistroAplicacoesChartP
         agrupado[dataFormatada] = (agrupado[dataFormatada] || 0) + 1;
     });
 
-    // 2. Ordenar as datas (se necessário, aqui assumimos ordem de chegada ou podemos ordenar keys)
-    // Para simplificar, vamos pegar as últimas 7 chaves se houver muitas
+    // Ordenar as datas
     const keys = Object.keys(agrupado).reverse().slice(0, 7).reverse(); // Pega os últimos 7 dias registrados
     
     const values = keys.map(k => agrupado[k]);
@@ -42,10 +41,9 @@ export function RegistroAplicacoesChart({ aplicacoes }: RegistroAplicacoesChartP
       fill: true, 
       label: 'Aplicações',
       data: dataValues,
-      // Ajustado para o Verde do seu tema (Primary)
       borderColor: '#10b981', 
       backgroundColor: 'rgba(16, 185, 129, 0.2)', 
-      tension: 0.4, // Curva um pouco mais suave
+      tension: 0.4, 
       pointBackgroundColor: '#10b981',
       pointBorderColor: '#fff',
     }],
@@ -61,7 +59,7 @@ export function RegistroAplicacoesChart({ aplicacoes }: RegistroAplicacoesChartP
     scales: {
         y: {
             beginAtZero: true,
-            ticks: { precision: 0 } // Garante números inteiros no eixo Y
+            ticks: { precision: 0 } 
         }
     }
   };

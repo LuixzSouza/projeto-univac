@@ -32,10 +32,8 @@ export function StatCard({
       whileHover={{ y: -4, boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)' }}
       transition={{ type: 'spring', stiffness: 300 }}
     >
-      {/* Círculo decorativo do Ícone */}
       {Icon && (
         <div className={`absolute -top-4 -right-4 h-24 w-24 rounded-full ${styles.bg} opacity-10 pointer-events-none flex items-center justify-center`}>
-           {/* O ícone real é renderizado abaixo para melhor controle */}
         </div>
       )}
       

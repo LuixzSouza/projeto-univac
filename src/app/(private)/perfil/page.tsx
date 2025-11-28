@@ -179,7 +179,6 @@ export default function PerfilPage() {
         <div className="absolute -bottom-16 left-8 flex items-end gap-6">
             <div className="relative group">
                 <div className="h-32 w-32 rounded-full border-4 border-bg-base bg-slate-200 shadow-xl flex items-center justify-center text-4xl font-bold text-slate-500 overflow-hidden">
-                    {/* Imagem Real viria aqui */}
                     {nome.charAt(0)}
                 </div>
                 <button 
@@ -336,4 +335,4 @@ export default function PerfilPage() {
   )
 }
 
-import { CheckCircle2, Printer } from 'lucide-react' // Add missing imports for compilation
+import { CheckCircle2, Printer } from 'lucide-react' 

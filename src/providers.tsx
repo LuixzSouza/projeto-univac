@@ -5,14 +5,13 @@ import React from 'react'
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    // 1. ThemeProvider vem por fora
+    // ThemeProvider Troca de Tema
     <ThemeProvider
       attribute="class" 
       defaultTheme="system"
       enableSystem
       disableTransitionOnChange
     >
-      {/* 2. SessionProvider vem por dentro */}
       <SessionProvider>
         {children}
       </SessionProvider>

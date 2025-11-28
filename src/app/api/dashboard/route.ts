@@ -10,7 +10,7 @@ export async function GET() {
       agendamentos,
       aplicacoesRecentes
     ] = await Promise.all([
-      // 1. Busca funcionários e SUAS APLICAÇÕES (necessário para o cálculo de conformidade)
+      // Busca funcionários e SUAS APLICAÇÕES (necessário para o cálculo de conformidade)
       prisma.funcionarioUsuario.findMany({
         where: { role: { not: 'ADMIN' } }, // Ignora admins nos gráficos
         select: {
@@ -23,10 +23,10 @@ export async function GET() {
         }
       }),
 
-      // 2. Busca todas as vacinas
+      // Busca todas as vacinas
       prisma.tipoVacina.findMany(),
 
-      // 3. Próximos Agendamentos (apenas futuros)
+      // Próximos Agendamentos (apenas futuros)
       prisma.agendamento.findMany({
         where: {
           dataAgendamento: { gte: new Date() }, // gte = maior ou igual a hoje
@@ -37,10 +37,10 @@ export async function GET() {
           vacina: { select: { nome: true } }
         },
         orderBy: { dataAgendamento: 'asc' },
-        take: 5 // Limita a 5
+        take: 5 
       }),
 
-      // 4. Aplicações Recentes (Feed)
+      // Aplicações Recentes (Feed)
       prisma.aplicacoesVacina.findMany({
         include: {
           funcionario: { select: { nome: true } },

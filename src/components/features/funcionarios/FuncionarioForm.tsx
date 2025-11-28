@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
 import { Button } from '@/components/ui/Button'
-// Importamos a interface localmente para evitar erros de mock
 import { IFuncionario } from './FuncionarioTable' 
 import { toast } from 'sonner'
 import { formatCPF, formatRegistro, formatTitleCase } from '@/lib/formatters'
@@ -12,7 +11,7 @@ import { formatCPF, formatRegistro, formatTitleCase } from '@/lib/formatters'
 interface FuncionarioFormProps {
   onClose: () => void
   funcionarioParaEditar: IFuncionario | null
-  onSuccess: () => void // Adicionado callback de sucesso
+  onSuccess: () => void 
 }
 
 const estadoInicial = {
@@ -31,7 +30,7 @@ export function FuncionarioForm({
   onSuccess
 }: FuncionarioFormProps) {
   const [formData, setFormData] = useState(estadoInicial)
-  const [loading, setLoading] = useState(false) // Estado de carregamento
+  const [loading, setLoading] = useState(false) 
   const modoEdicao = !!funcionarioParaEditar
 
   useEffect(() => {
@@ -41,7 +40,7 @@ export function FuncionarioForm({
         email: funcionarioParaEditar.email,
         numeroRegistro: String(funcionarioParaEditar.numeroRegistro),
         cpf: funcionarioParaEditar.cpf,
-        senha: '', // Senha sempre começa vazia na edição
+        senha: '',
         role: funcionarioParaEditar.role,
         status: funcionarioParaEditar.status,
       })
@@ -52,8 +51,6 @@ export function FuncionarioForm({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { id, value } = e.target
-    
-    // ... seus outros ifs (cpf, status) ...
 
     if (id === 'cpf') {
         setFormData((prev) => ({ ...prev, [id]: formatCPF(value) }))

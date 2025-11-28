@@ -2,12 +2,12 @@
 
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link' // ✨ Import do Link
+import Link from 'next/link' 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Loader2, Eye, EyeOff, Lock, Mail, Github, Chrome, QrCode, 
-  AlertTriangle, Smartphone, Info, ArrowLeft // ✨ Import do ArrowLeft
+  AlertTriangle, Smartphone, Info, ArrowLeft 
 } from 'lucide-react'
 import { toast } from 'sonner'
 import Image from 'next/image'
@@ -15,7 +15,7 @@ import Image from 'next/image'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 
-// --- CONFIGURAÇÃO DO SLIDESHOW (Contexto Acadêmico) ---
+// --- CONFIGURAÇÃO DO SLIDESHOW ---
 const SLIDES = [
   {
     id: 1,
@@ -184,7 +184,7 @@ export default function LoginPage() {
       {/* --- COLUNA DIREITA (FORMULÁRIO INTERATIVO) --- */}
       <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative">
         
-        {/* ✨ BOTÃO DE VOLTAR (LINK PEQUENO) ✨ */}
+        {/* BOTÃO DE VOLTAR*/}
         <div className="absolute top-6 left-6 z-20">
             <Link href="/" className="flex items-center gap-2 text-sm font-medium text-text-muted hover:text-primary transition-colors group">
                 <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />

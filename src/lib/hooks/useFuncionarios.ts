@@ -1,1 +1,0 @@
-// # (Ex: SWR ou React Query para buscar dados)

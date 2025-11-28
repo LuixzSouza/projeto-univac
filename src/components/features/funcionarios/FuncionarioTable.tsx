@@ -14,7 +14,7 @@ export interface IFuncionario {
   cpf: string
   role: string
   status: boolean
-  ultimoAcesso?: string // Novo campo simulado
+  ultimoAcesso?: string 
 }
 
 interface FuncionarioTableProps {
@@ -29,9 +29,6 @@ const getStatusConfig = (func: IFuncionario) => {
   // Se estiver inativo no cadastro, é o status principal
   if (!func.status) return { label: 'Inativo', color: 'bg-red-500', text: 'text-red-600', border: 'border-red-200', bg: 'bg-red-50' };
 
-  // Simulação de lógica de negócio:
-  // IDs pares estão "Em Atendimento", Ímpares "Disponíveis" (Para demonstração)
-  // Na vida real, isso viria de um websocket ou tabela de sessões.
   const randomState = func.id % 3; 
 
   if (randomState === 0) return { label: 'Em Atendimento', color: 'bg-yellow-500', text: 'text-yellow-700', border: 'border-yellow-200', bg: 'bg-yellow-50' };
@@ -87,7 +84,7 @@ export function FuncionarioTable({ data, onEdit, onDelete, userRole }: Funcionar
                    </div>
                 </TableCell>
 
-                {/* Coluna Status (Melhorada) */}
+                {/* Coluna Status  */}
                 <TableCell>
                   <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border ${statusConfig.bg} ${statusConfig.border}`}>
                     <span className={`h-2 w-2 rounded-full ${statusConfig.color} animate-pulse`}></span>

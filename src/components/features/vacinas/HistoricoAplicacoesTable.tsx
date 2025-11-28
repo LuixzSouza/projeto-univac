@@ -4,13 +4,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
-// Interface local para desacoplar do mock
-// Mantemos a estrutura plana para facilitar o uso na Agenda e Dashboard
 export interface IAplicacaoHist {
   id: number
   funcionarioNome: string
   tipoVacina: string
-  dataAplicacao: Date | string // Aceita string (JSON) ou Date (JS)
+  dataAplicacao: Date | string 
   responsavel?: string
   lote?: string
 }

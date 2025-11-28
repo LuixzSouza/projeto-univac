@@ -4,10 +4,9 @@ import { formatDistanceToNow } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { Syringe, Activity } from 'lucide-react'
 
-// Interface compatível com o retorno da API do Dashboard
 interface AtividadeRecente {
   id: number
-  dataAplicacao: string // Vem como string do JSON
+  dataAplicacao: string 
   lote: string
   funcionario: { nome: string }
   vacina: { nome: string }
@@ -41,7 +40,6 @@ export function RecentActivityFeed({ atividades }: RecentActivityFeedProps) {
                 </p>
                 <p className="text-xs text-text-muted mt-0.5" title={new Date(app.dataAplicacao).toLocaleString('pt-BR')}>
                   {formatDistanceToNow(new Date(app.dataAplicacao), { addSuffix: true, locale: ptBR })}
-                  {/* Se quiser adicionar o lote: • Lote {app.lote} */}
                 </p>
               </div>
             </li>

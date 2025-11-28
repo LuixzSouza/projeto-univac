@@ -74,7 +74,7 @@ export default function FuncionarioDetailPage({ params }: { params: { id: string
   const isAdmin = (session?.user as any)?.role === 'ADMIN';
   const currentUserId = (session?.user as any)?.id;
 
-  // 1. Busca de Dados
+  // Busca de Dados
   const fetchData = useCallback(async () => {
     try {
       setIsLoading(true)
@@ -108,7 +108,7 @@ export default function FuncionarioDetailPage({ params }: { params: { id: string
     fetchData()
   }, [fetchData])
 
-  // 2. Função de Impressão OTIMIZADA (Com Toast)
+  // Função de Impressão OTIMIZADA (Com Toast)
   const handlePrint = () => {
     const content = componentRef.current
     if (!content) {
@@ -117,10 +117,8 @@ export default function FuncionarioDetailPage({ params }: { params: { id: string
     }
 
     setIsPrinting(true)
-    // Toast de feedback imediato para o usuário saber que o clique funcionou
     const toastId = toast.loading("Preparando documento para impressão...")
 
-    // Pequeno timeout para garantir que a UI atualizou antes de travar com o print()
     setTimeout(() => {
         const printWindow = window.open('', '', 'width=800,height=600')
         
@@ -152,7 +150,7 @@ export default function FuncionarioDetailPage({ params }: { params: { id: string
     }, 100)
   }
 
-  // 3. Simulação de Notificação
+  // Simulação de Notificação
   const handleNotify = () => {
       setIsNotifying(true)
       // Toast Promessa (Carregando -> Sucesso)

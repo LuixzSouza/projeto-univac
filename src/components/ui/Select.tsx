@@ -5,7 +5,7 @@ import { AlertCircle } from 'lucide-react'
 interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   label: string
   error?: string
-  icon?: React.ElementType // ✨ Nova prop
+  icon?: React.ElementType 
 }
 
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(
@@ -20,7 +20,6 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
         </label>
         
         <div className="relative">
-          {/* Renderiza ícone se existir */}
           {Icon && (
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
               <Icon className="h-5 w-5 text-text-muted" /> 

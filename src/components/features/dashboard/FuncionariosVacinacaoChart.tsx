@@ -6,7 +6,6 @@ import { useEffect, useMemo, useState } from 'react'
 
 ChartJS.register(ArcElement, Tooltip, Legend)
 
-// Interfaces Locais
 interface VacinaSimples {
   id: number
   obrigatoriedade: boolean
@@ -20,7 +19,7 @@ interface FuncionarioComApps {
 
 interface ChartProps {
   funcionarios: FuncionarioComApps[]
-  vacinas?: VacinaSimples[] // Opcional para evitar erro se não passar agora, mas ideal passar
+  vacinas?: VacinaSimples[] 
 }
 
 interface ChartColors {
@@ -46,9 +45,9 @@ export function FuncionariosVacinacaoChart({ funcionarios, vacinas = [] }: Chart
     const getColor = (varName: string, fallback: string) => style.getPropertyValue(varName).trim() || fallback
 
     setChartColors({
-      success: '#10b981', // Verde Primary
-      primary: '#f59e0b', // Amarelo (Parcial)
-      danger: '#ef4444',  // Vermelho
+      success: '#10b981', 
+      primary: '#f59e0b', 
+      danger: '#ef4444',  
       border: getColor('--bg-surface', '#ffffff'),
       text: getColor('--text-muted', '#6b7280'),
     })

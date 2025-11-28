@@ -72,7 +72,7 @@ export function QuickActionsCard() {
       
       <div className="grid grid-cols-1 gap-3 flex-grow content-start">
         
-        {/* 1. Agendar Vacinação (Destaque Verde) */}
+        {/* Agendar Vacinação  */}
         <ActionBtn 
           icon={CalendarPlus}
           label="Novo Agendamento"
@@ -83,7 +83,7 @@ export function QuickActionsCard() {
           border="border-primary/20"
         />
 
-        {/* 2. Adicionar Funcionário (Destaque Azul) */}
+        {/* Adicionar Funcionário */}
         <ActionBtn 
           icon={UserPlus}
           label="Cadastrar Funcionário"
@@ -94,7 +94,7 @@ export function QuickActionsCard() {
           border="border-blue-200 dark:border-blue-800"
         />
 
-        {/* 3. Exportar Relatório (Cinza/Neutro com Loading) */}
+        {/* Exportar Relatório  */}
         <button 
             onClick={handleExportClick}
             disabled={isExporting}
@@ -119,7 +119,7 @@ export function QuickActionsCard() {
             </div>
         </button>
 
-        {/* 4. Atalhos Secundários (Grid menor) */}
+        {/* Atalhos Secundários */}
         <div className="grid grid-cols-2 gap-3 mt-1">
              <SmallActionBtn 
                 icon={LifeBuoy} 
@@ -141,8 +141,6 @@ export function QuickActionsCard() {
 }
 
 // --- SUB-COMPONENTES LOCAIS PARA ORGANIZAÇÃO ---
-
-// Botão Grande com Descrição
 interface ActionBtnProps {
     icon: React.ElementType
     label: string
@@ -173,7 +171,6 @@ function ActionBtn({ icon: Icon, label, desc, onClick, color, bg, border }: Acti
     )
 }
 
-// Botão Pequeno (Quadrado)
 function SmallActionBtn({ icon: Icon, label, onClick, color }: any) {
     return (
         <button 

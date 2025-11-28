@@ -11,7 +11,7 @@ export async function PUT(
     const body = await request.json();
     const { codigo, quantidade, validade } = body;
 
-    // Validação básica no backend
+    // Validação básica
     if (!codigo || quantidade === undefined || !validade) {
         return NextResponse.json({ error: "Dados inválidos" }, { status: 400 });
     }
@@ -21,7 +21,7 @@ export async function PUT(
       data: {
         codigo,
         quantidade: Number(quantidade),
-        validade: new Date(validade) // Converte string para data
+        validade: new Date(validade) 
       }
     });
 

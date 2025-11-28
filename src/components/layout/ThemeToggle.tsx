@@ -14,7 +14,7 @@ export function ThemeToggle() {
   }, [])
 
   if (!mounted) {
-    return <div className="h-9 w-9" /> // Placeholder para evitar layout shift
+    return <div className="h-9 w-9" /> 
   }
 
   const isDark = resolvedTheme === 'dark'
@@ -33,14 +33,11 @@ export function ThemeToggle() {
         focus:outline-none focus:ring-2 focus:ring-primary/50
         ${isDark ? 'bg-slate-900 hover:bg-slate-800' : 'bg-white hover:bg-slate-50'}
       `}
-      whileTap={{ scale: 0.9, rotate: 15 }} // Micro-interação ao clicar
+      whileTap={{ scale: 0.9, rotate: 15 }} 
       whileHover={{ scale: 1.05 }}
       aria-label="Alternar Tema"
       title={isDark ? "Mudar para Modo Claro" : "Mudar para Modo Escuro"}
     >
-      {/* AnimatePresence permite animar o componente que está SAINDO da tela.
-         mode="wait" garante que um sai antes do outro entrar.
-      */}
       <AnimatePresence mode="wait" initial={false}>
         {isDark ? (
           <motion.div
@@ -50,7 +47,6 @@ export function ThemeToggle() {
             exit={{ scale: 0, rotate: 90, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 15 }}
           >
-            {/* A Lua usa a cor Primary (Verde) para conectar com a identidade do UniVac */}
             <Moon size={18} className="text-primary fill-primary/20" />
           </motion.div>
         ) : (
@@ -61,13 +57,11 @@ export function ThemeToggle() {
             exit={{ scale: 0, rotate: -90, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 15 }}
           >
-            {/* O Sol usa Laranja/Amarelo para contraste */}
             <Sun size={18} className="text-orange-500 fill-orange-500/20" />
           </motion.div>
         )}
       </AnimatePresence>
       
-      {/* Efeito de Brilho (Glow) atrás do botão */}
       <div className={`absolute inset-0 rounded-full blur-md transition-opacity duration-500 ${isDark ? 'bg-primary/20 opacity-50' : 'bg-orange-400/20 opacity-0'}`} />
 
     </motion.button>

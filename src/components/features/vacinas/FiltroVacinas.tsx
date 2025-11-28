@@ -30,7 +30,6 @@ export function FiltroVacinas({ filtro, onFiltroChange }: FiltroVacinasProps) {
       </div>
 
       <div className="relative">
-        {/* Ícone de Lupa absoluto dentro do input */}
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <Search size={18} className="text-text-muted" />
         </div>
@@ -40,8 +39,8 @@ export function FiltroVacinas({ filtro, onFiltroChange }: FiltroVacinasProps) {
             placeholder="Busque por nome ou descrição..."
             value={filtro}
             onChange={(e) => onFiltroChange(e.target.value)}
-            className="pl-10" // Dá espaço para o ícone
-            label="" // Remove label padrão para ficar mais clean dentro do card
+            className="pl-10" 
+            label="" 
         />
       </div>
     </div>

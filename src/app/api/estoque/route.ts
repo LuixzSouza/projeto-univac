@@ -28,7 +28,7 @@ export async function POST(request: Request) {
         vacinaId: Number(vacinaId),
         codigo,
         quantidade: Number(quantidade),
-        validade: new Date(validade) // Importante converter string para Date
+        validade: new Date(validade) 
       }
     });
 

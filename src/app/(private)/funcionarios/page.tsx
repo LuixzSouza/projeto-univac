@@ -22,7 +22,7 @@ export default function FuncionariosPage() {
   
   // Estados de Filtro e Paginação
   const [filtroFuncionarios, setFiltroFuncionarios] = useState('')
-  const [isSearching, setIsSearching] = useState(false) // ✨ Estado de Loading da Busca
+  const [isSearching, setIsSearching] = useState(false) 
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage] = useState(10)
   
@@ -62,12 +62,12 @@ export default function FuncionariosPage() {
   const funcionariosFiltrados = useMemo(() => {
     let list = funcionarios;
     
-    // 1. Filtro de Permissão
+    // Filtro de Permissão
     if (!isAdmin && currentUserId) {
         list = list.filter(f => String(f.id) === currentUserId);
     }
     
-    // 2. Filtro de Texto
+    // Filtro de Texto
     if (!filtroFuncionarios) return list;
     const lowerFilter = filtroFuncionarios.toLowerCase()
     
@@ -85,7 +85,7 @@ export default function FuncionariosPage() {
 
   const totalPages = Math.ceil(funcionariosFiltrados.length / itemsPerPage)
 
-  // ✨ Handler de Busca com Loading
+  // Busca com Loading
   const handleFiltroChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setFiltroFuncionarios(value);
@@ -99,13 +99,10 @@ export default function FuncionariosPage() {
   }
 
   // --- ESTATÍSTICAS (Cards do Topo) ---
-  // ✨ Lógica ajustada para fazer sentido (Sem "Em Atendimento")
   const stats = useMemo(() => {
       const total = funcionarios.length;
       const ativos = funcionarios.filter(f => f.status).length;
       const inativos = funcionarios.filter(f => !f.status).length;
-      // Pendentes: Simulação (ex: cadastro incompleto ou sem vacina recente)
-      // Na vida real, cruzaria com tabela de vacinas
       const pendentes = Math.floor(total * 0.15); 
       return { total, ativos, inativos, pendentes };
   }, [funcionarios]);
@@ -138,7 +135,6 @@ export default function FuncionariosPage() {
     setTimeout(() => setFuncionarioParaExcluir(null), 300) 
   }
 
-  // ✨ CORREÇÃO: Função handleSuccessSave agora existe
   const handleSuccessSave = async () => {
     await carregarFuncionarios()
     // O modal fecha automaticamente pelo Form, mas podemos forçar aqui se precisar
@@ -201,7 +197,7 @@ export default function FuncionariosPage() {
         )}
       </motion.div>
 
-      {/* ✨ CARDS DE STATUS CORRIGIDOS (Temática Dark/Light funcionando) */}
+      {/* CARDS DE STATUS */}
       {isAdmin && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-2 md:grid-cols-4 gap-4">
               
@@ -235,7 +231,7 @@ export default function FuncionariosPage() {
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div className='relative flex-grow md:max-w-md'>
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                  {/* ✨ Ícone muda para loading ao digitar */}
+                  {/* muda para loading ao digitar */}
                   {isSearching ? <Loader2 size={18} className="text-primary animate-spin"/> : <Search size={18} className='text-text-muted'/>}
                 </div>
                 <input
@@ -289,7 +285,7 @@ export default function FuncionariosPage() {
         )}
       </motion.div>
 
-      {/* MODAIS (Mantidos) */}
+      {/* MODAIS */}
       <AnimatePresence>
         {isFormModalOpen && (
           <Modal

@@ -5,7 +5,7 @@ import { ArrowRight } from 'lucide-react'
 interface AcessarButtonProps {
   href: string
   label?: string
-  variant?: 'solid' | 'outline' // ✨ Nova opção de estilo
+  variant?: 'solid' | 'outline'
   className?: string
 }
 
@@ -32,7 +32,6 @@ export function AcessarButton({
             {label}
         </span>
         
-        {/* ✨ A seta se move para a direita no hover */}
         <ArrowRight 
             size={20} 
             className="transition-transform duration-300 ease-out group-hover:translate-x-1" 

@@ -59,10 +59,9 @@ const components: Components<BigCalendarEvent, object> = {
   event: EventoEstilizado,
 }
 
-// Estilo dos eventos (barrinhas verdes)
 const eventPropGetter = (event: BigCalendarEvent) => {
   const style = {
-    backgroundColor: '#10b981', // Verde Primary
+    backgroundColor: '#10b981', 
     borderColor: '#059669', 
     color: '#ffffff',                  
     borderRadius: '6px',
@@ -77,7 +76,6 @@ const eventPropGetter = (event: BigCalendarEvent) => {
 }
 
 const dayPropGetter = (date: Date): React.HTMLAttributes<HTMLDivElement> => {
-    // Se for hoje, aplica uma classe especial que vamos estilizar no CSS abaixo
     return isSameDay(date, new Date()) ? { className: 'rbc-today-custom' } : {};
 }
 
@@ -101,12 +99,11 @@ export function Calendario({
   return (
     <div className="h-[75vh] rounded-xl bg-bg-surface p-6 shadow-xl border border-border text-text-base relative overflow-hidden">
       
-      {/* 🎨 CSS GLOBAL INJETADO APENAS PARA ESTE COMPONENTE */}
       <style jsx global>{`
-        /* 1. RESET GERAL E TEXTOS */
+        /* RESET GERAL E TEXTOS */
         .rbc-calendar { font-family: inherit; color: inherit; }
         
-        /* 2. BOTÕES DA TOOLBAR (HOJE, MÊS, ETC) */
+        /* BOTÕES DA TOOLBAR (HOJE, MÊS, ETC) */
         .rbc-toolbar { margin-bottom: 20px; gap: 10px; flex-wrap: wrap; }
         .rbc-toolbar-label { font-size: 1.5rem; font-weight: 700; color: inherit; text-transform: capitalize; }
         
@@ -127,7 +124,7 @@ export function Calendario({
             color: #10b981;
         }
         
-        /* Botão ATIVO (Fundo Verde) */
+        /* Botão ATIVO  */
         .rbc-btn-group button.rbc-active, 
         .rbc-btn-group button.rbc-active:hover, 
         .rbc-btn-group button.rbc-active:focus {
@@ -138,7 +135,6 @@ export function Calendario({
             font-weight: 600;
         }
 
-        /* 3. REMOVER FUNDO BRANCO DOS DIAS "OFF-RANGE" */
         .rbc-month-view, .rbc-time-view, .rbc-agenda-view { border-color: #374151; }
         .rbc-header { 
             border-bottom: 1px solid #374151; 
@@ -146,30 +142,28 @@ export function Calendario({
             font-size: 0.85rem; 
             text-transform: uppercase; 
             letter-spacing: 0.05em;
-            color: #9ca3af; /* gray-400 */
+            color: #9ca3af; 
         }
         
         .rbc-day-bg { border-left: 1px solid #374151; }
         .rbc-month-row { border-top: 1px solid #374151; }
         
-        /* O Culpado do fundo branco: */
         .rbc-off-range-bg { 
             background-color: rgba(0, 0, 0, 0.2) !important; /* Escurece em vez de clarear */
         }
         
-        /* 4. TEXTOS DOS DIAS */
+        /* TEXTOS DOS DIAS */
         .rbc-date-cell { padding: 8px; font-weight: 500; font-size: 0.9rem; }
         .rbc-button-link { color: inherit; }
         .rbc-off-range .rbc-button-link { color: #4b5563; } /* gray-600 para dias fora */
 
-        /* 5. ESTILO DO DIA "HOJE" */
+        /* ESTILO DO DIA "HOJE" */
         .rbc-today-custom {
             background-color: rgba(16, 185, 129, 0.1) !important;
         }
-        /* Remove o padrão amarelo/azul do library */
         .rbc-today { background-color: transparent; } 
 
-        /* 6. LISTA (AGENDA VIEW) */
+        /* LISTA  */
         .rbc-agenda-view table.rbc-agenda-table { border: none; }
         .rbc-agenda-view table.rbc-agenda-table tbody > tr > td { 
             border-color: #374151; 
@@ -177,7 +171,6 @@ export function Calendario({
         }
         .rbc-agenda-view table.rbc-agenda-table .rbc-agenda-time-cell { text-transform: uppercase; font-size: 0.8rem; color: #9ca3af; }
 
-        /* Ajustes de Time Grid */
         .rbc-time-header-content { border-left: 1px solid #374151; }
         .rbc-timeslot-group { border-bottom: 1px solid #374151; }
         .rbc-time-content { border-top: 1px solid #374151; }

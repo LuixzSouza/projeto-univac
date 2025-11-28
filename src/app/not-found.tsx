@@ -22,7 +22,6 @@ export default function NotFound() {
   return (
     <div className="relative flex min-h-screen items-center justify-center bg-bg-base p-4 overflow-hidden">
       
-      {/* Elementos de Fundo (Blobs Decorativos) */}
       <div className="absolute top-1/4 left-1/4 h-64 w-64 rounded-full bg-primary/10 blur-3xl filter animate-pulse" />
       <div className="absolute bottom-1/4 right-1/4 h-64 w-64 rounded-full bg-blue-500/10 blur-3xl filter" />
 
@@ -34,15 +33,12 @@ export default function NotFound() {
       >
         <div className="rounded-2xl bg-bg-surface/80 p-10 shadow-2xl border border-border backdrop-blur-sm">
           
-          {/* Ícone Animado */}
           <div className="relative mx-auto mb-6 h-24 w-24 flex items-center justify-center">
-            {/* Círculo de fundo do ícone */}
             <div className="absolute inset-0 rounded-full bg-primary/10 blur-md" />
             
             <motion.div animate={floatAnimation} className="relative z-10 text-primary">
               <Syringe size={80} />
               
-              {/* Gotinha caindo (Detalhe extra!) */}
               <motion.div
                 className="absolute -bottom-2 left-[38px] h-3 w-3 rounded-full bg-primary"
                 animate={{
@@ -59,7 +55,6 @@ export default function NotFound() {
             </motion.div>
           </div>
 
-          {/* Texto Grande com Gradiente */}
           <h1 className="text-7xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-primary to-green-600 drop-shadow-sm">
             404
           </h1>

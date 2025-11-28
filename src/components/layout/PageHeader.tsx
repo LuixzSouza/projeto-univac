@@ -28,10 +28,9 @@ export function PageHeader() {
       
       <div className="flex items-center text-sm text-text-muted">
         
-        {/* ✨ BOTÃO VOLTAR MELHORADO ✨ */}
         <Button 
-          variant="ghost" // Base transparente
-          size="sm"       // Tamanho pequeno
+          variant="ghost" 
+          size="sm"      
           onClick={() => router.back()} 
           className="
             mr-3 h-9 w-9 rounded-full p-0 shrink-0
@@ -42,7 +41,7 @@ export function PageHeader() {
           "
           title="Voltar para a página anterior"
         >
-          <ArrowLeft size={18} /> {/* Ícone ligeiramente maior */}
+          <ArrowLeft size={18} /> 
         </Button>
 
         {/* Breadcrumbs */}

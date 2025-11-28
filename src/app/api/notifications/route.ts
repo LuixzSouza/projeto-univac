@@ -7,7 +7,7 @@ export async function GET() {
     const notifications = [];
     const hoje = new Date();
 
-    // 1. VERIFICAR ESTOQUE BAIXO E VALIDADE
+    // VERIFICAR ESTOQUE BAIXO E VALIDADE
     const vacinas = await prisma.tipoVacina.findMany({
       include: { lotes: true }
     });
@@ -52,7 +52,7 @@ export async function GET() {
       });
     });
 
-    // 2. VERIFICAR AGENDA DE HOJE
+    // VERIFICAR AGENDA DE HOJE
     const agendamentosHoje = await prisma.agendamento.count({
       where: {
         dataAgendamento: {
@@ -73,8 +73,7 @@ export async function GET() {
       });
     }
 
-    // 3. VERIFICAR PENDÊNCIAS CRÍTICAS (Funcionários atrasados)
-    // (Opcional: pode pesar a query, vamos deixar simples por enquanto)
+    // VERIFICAR PENDÊNCIAS CRÍTICAS (Funcionários atrasados)
 
     return NextResponse.json(notifications);
   } catch (error) {

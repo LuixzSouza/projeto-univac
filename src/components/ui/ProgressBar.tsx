@@ -2,8 +2,8 @@
 
 interface ProgressBarProps {
   value: number
-  showLabel?: boolean // ✨ Opção de mostrar texto
-  colorClass?: string // ✨ Opção de cor customizada (ex: 'bg-red-500')
+  showLabel?: boolean 
+  colorClass?: string 
 }
 
 export function ProgressBar({ value, showLabel = false, colorClass = "bg-primary" }: ProgressBarProps) {

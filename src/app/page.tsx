@@ -101,7 +101,7 @@ export default function LandingPage() {
               transition={{ duration: 0.6 }}
               className="mx-auto max-w-4xl space-y-8"
             >
-              {/* BADGE DO TCC DA KARINY (Agora é Link) */}
+              {/* BADGE DO TCC DA KARINY */}
               <Link href="/archive/TCC_KARINY.pdf" target="_blank" className="inline-flex items-center gap-2 rounded-full border border-green-200 bg-green-50/80 backdrop-blur-sm px-4 py-1.5 text-sm font-medium text-green-700 shadow-sm hover:scale-105 transition-transform cursor-pointer group">
                 <span className="relative flex h-2.5 w-2.5">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
@@ -130,7 +130,7 @@ export default function LandingPage() {
                   </Button>
                 </Link>
                 
-                {/* Botão Secundário: GitHub (RESTAURADO) */}
+                {/* Botão Secundário: GitHub */}
                 <Link href="https://github.com/LuixzSouza/projeto-univac" target="_blank">
                   <Button variant="secondary" className="h-14 px-8 text-lg rounded-full bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 shadow-sm hover:shadow-md transition-all gap-2">
                     <GithubIcon /> Código Fonte
@@ -147,7 +147,7 @@ export default function LandingPage() {
               className="relative mx-auto max-w-5xl"
             >
                 <div className="group relative rounded-xl bg-slate-900 p-2 shadow-2xl shadow-green-900/20 ring-1 ring-slate-200/10 backdrop-blur-xl lg:rounded-2xl lg:p-3 cursor-pointer" onClick={() => setIsVideoModalOpen(true)}>
-                    {/* Barra de Título Fake */}
+                    {/* Barra de Título */}
                     <div className="absolute top-0 left-0 right-0 h-10 flex items-center px-4 gap-2 z-10 bg-gradient-to-b from-slate-900 to-transparent">
                         <div className="w-3 h-3 rounded-full bg-red-500"></div>
                         <div className="w-3 h-3 rounded-full bg-yellow-500"></div>

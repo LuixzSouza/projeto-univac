@@ -10,7 +10,6 @@ interface TableSectionProps extends React.HTMLAttributes<HTMLTableSectionElement
   children: React.ReactNode;
 }
 
-// AQUI ESTAVA O PROBLEMA: Adicionamos suporte a props de linha (TR)
 interface TableRowProps extends React.HTMLAttributes<HTMLTableRowElement> {
   children: React.ReactNode;
 }
@@ -57,13 +56,13 @@ export function TableBody({ children, className, ...props }: TableSectionProps) 
   );
 }
 
-// Linha da Tabela (CORREÇÃO APLICADA AQUI)
+// Linha da Tabela
 export function TableRow({ children, className, ...props }: TableRowProps) {
   return (
     <tr 
       // Juntamos a classe padrão com a classe que vem de fora (className)
       className={`hover:bg-border transition-colors ${className || ''}`} 
-      {...props} // Passamos o resto das props (onClick, key, etc)
+      {...props} 
     >
       {children}
     </tr>

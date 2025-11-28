@@ -3,12 +3,12 @@ import { prisma } from "@/lib/db";
 
 export async function GET() {
   try {
-    // 1. Busca vacinas obrigatórias
+    // Busca vacinas obrigatórias
     const vacinasObrigatorias = await prisma.tipoVacina.findMany({
       where: { obrigatoriedade: true }
     });
 
-    // 2. Busca funcionários e suas aplicações
+    // Busca funcionários e suas aplicações
     const funcionarios = await prisma.funcionarioUsuario.findMany({
       where: { role: { not: 'ADMIN' }, status: true },
       include: {
@@ -16,7 +16,7 @@ export async function GET() {
       }
     });
 
-    // 3. Monta o CSV manualmente (cabeçalho)
+    // Monta o CSV manualmente (cabeçalho)
     let csv = "Nome,Email,Registro,Status,Vacinas Pendentes\n";
 
     funcionarios.forEach(func => {
@@ -42,7 +42,7 @@ export async function GET() {
       }
     });
 
-    // 4. Retorna o arquivo
+    // Retorna o arquivo
     return new NextResponse(csv, {
       status: 200,
       headers: {

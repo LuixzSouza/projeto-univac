@@ -2,7 +2,6 @@
 
 import { AlertTriangle, CheckCircle } from 'lucide-react'
 
-// Interfaces mínimas para o card funcionar
 interface VacinaSimples {
   id: number
   obrigatoriedade: boolean
@@ -11,7 +10,7 @@ interface VacinaSimples {
 interface FuncionarioComAplicacoes {
   id: number
   nome: string
-  aplicacoes: { vacinaId: number }[] // Precisamos saber quais vacinas ele tomou
+  aplicacoes: { vacinaId: number }[] 
 }
 
 interface ComplianceSummaryCardProps {

@@ -53,7 +53,6 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
           <motion.div
             className="w-full max-w-lg rounded-xl bg-bg-surface p-6 shadow-2xl border border-border text-text-base max-h-[90vh] overflow-y-auto custom-scrollbar"
             
-            // ✅ CORREÇÃO AQUI: Tipagem explícita do evento
             onMouseDown={(e: React.MouseEvent) => e.stopPropagation()} 
             onClick={(e: React.MouseEvent) => e.stopPropagation()}
             

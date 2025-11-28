@@ -1,15 +1,15 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation' // ✨ Importamos useRouter
+import { usePathname, useRouter } from 'next/navigation' 
 import { useState } from 'react'
 import { 
   LayoutDashboard, Users, Syringe, CalendarDays, UserCircle, Settings,
   ChevronLeft, Menu, HelpCircle, Package, ShieldAlert,
-  Loader2 // ✨ Importamos Loader2
+  Loader2 
 } from 'lucide-react'
 import { useSession } from 'next-auth/react'
-import { toast } from 'sonner' // ✨ Importamos Toast
+import { toast } from 'sonner' 
 
 // Links de navegação
 const navLinks = [
@@ -24,7 +24,6 @@ const navLinks = [
   { name: 'Auditoria', href: '/auditoria', icon: ShieldAlert, requires: 'ADMIN' },
 ]
 
-// Função auxiliar para iniciais (mantida)
 function getInitials(name?: string | null): string {
     if (!name) return '?'
     const names = name.trim().split(/\s+/)
@@ -35,10 +34,9 @@ function getInitials(name?: string | null): string {
 
 export function Sidebar() {
   const pathname = usePathname()
-  const router = useRouter() // ✨ Usamos useRouter
+  const router = useRouter() 
   const { data: session } = useSession()
   
-  // ✨ NOVOS ESTADOS DE NAVEGAÇÃO
   const [isNavigating, setIsNavigating] = useState(false)
   const [navigatingTo, setNavigatingTo] = useState('')
   
@@ -55,7 +53,7 @@ export function Sidebar() {
   }
   const hideElement = isCollapsed && !isMobileOpen;
 
-  // Filtro RBAC (Mantido)
+  // Filtro RBAC 
   const filterLinks = navLinks.filter(link => {
     if (link.requires === 'ADMIN' && userRole.toUpperCase() !== 'ADMIN') {
       return false;
@@ -63,7 +61,6 @@ export function Sidebar() {
     return true;
   });
 
-  // ✨ HANDLER DE NAVEGAÇÃO COM FEEDBACK E BLOQUEIO DE DUPLO CLIQUE
   const handleNavigation = (linkName: string, href: string) => {
     if (isNavigating || pathname === href) return;
     
@@ -75,8 +72,7 @@ export function Sidebar() {
     
     router.push(href);
 
-    // Ação de limpeza: A navegação do Next.js deve resolver o isNavigating.
-    // Usamos um timeout de segurança para destravar a navegação caso o Next.js não complete o ciclo rapidamente.
+    // Ação de limpeza
     setTimeout(() => {
       setIsNavigating(false);
       toast.dismiss('nav-status');
@@ -104,7 +100,7 @@ export function Sidebar() {
         />
       )}
 
-      {/* ASIDE Principal */}
+      {/* ASIDE */}
       <aside 
         className={`
           flex flex-col bg-bg-surface border-r border-border 
@@ -115,11 +111,9 @@ export function Sidebar() {
           lg:shadow-none
         `}
       >
-        {/* ... (Cabeçalho da Sidebar) ... */}
+        {/* Cabeçalho da Sidebar */}
 
         <div className="relative flex items-center justify-center h-16 border-b border-border/50 mb-4">
-            {/* Botões de colapsar/fechar omitidos para brevidade, mas estão no seu código */}
-            {/* Logo */}
             <div className={`flex items-center gap-2 transition-opacity duration-200 ${hideElement ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'}`}>
                 <Syringe size={24} className="text-primary" />
                 <span className="text-xl font-bold text-text-base">Uni<span className="text-primary">Vac</span></span>
@@ -133,12 +127,12 @@ export function Sidebar() {
           <ul className="space-y-1">
             {filterLinks.map((link) => {
               const active = isActive(link.href)
-              const isCurrentlyNavigating = isNavigating && navigatingTo === link.href; // O link que está sendo carregado
+              const isCurrentlyNavigating = isNavigating && navigatingTo === link.href;
               
               return (
                 <li key={link.name} className="relative group">
                   <button
-                    onClick={() => handleNavigation(link.name, link.href)} // ✨ Chamamos o novo handler
+                    onClick={() => handleNavigation(link.name, link.href)} 
                     disabled={isNavigating || active} // Bloqueia se já estiver navegando ou se já for a página atual
                     className={`
                       w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium
@@ -164,7 +158,7 @@ export function Sidebar() {
                     )}
                   </button>
 
-                  {/* Tooltip (Mantido) */}
+                  {/* Tooltip */}
                   {hideElement && (
                     <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 z-50 hidden group-hover:block whitespace-nowrap rounded bg-gray-800 px-2 py-1 text-xs text-white shadow-lg animate-in fade-in slide-in-from-left-1 duration-200">
                         {link.name}
@@ -177,7 +171,7 @@ export function Sidebar() {
           </ul>
         </nav>
 
-        {/* Rodapé do Usuário (Mantido) */}
+        {/* Rodapé do Usuário */}
         <div className="border-t border-border p-4">
             <div className={`flex items-center ${hideElement ? 'justify-center' : 'gap-3'}`}>
                 <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-primary to-green-600 text-xs font-bold text-white shrink-0 shadow-sm">{userInitials}</div>

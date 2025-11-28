@@ -1,6 +1,6 @@
 // app/api/vacinas/route.ts
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db"; // Importando do seu arquivo existente
+import { prisma } from "@/lib/db"; 
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
@@ -25,18 +25,18 @@ export async function GET() {
 // CRIAR NOVA VACINA (POST)
 export async function POST(request: Request) {
   try {
-    // 1. Segurança: Verifica se o usuário está logado
+    // Segurança: Verifica se o usuário está logado
     const session = await getServerSession(authOptions);
     
     if (!session) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
-    // 2. Recebe os dados do corpo da requisição
+    // Recebe os dados do corpo da requisição
     const body = await request.json();
     const { nome, descricao, obrigatoriedade } = body;
 
-    // 3. Validação simples
+    // Validação simples
     if (!nome || !descricao) {
       return NextResponse.json(
         { error: "Nome e descrição são obrigatórios" },
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // 4. Verifica se já existe vacina com esse nome
+    // Verifica se já existe vacina com esse nome
     const vacinaExistente = await prisma.tipoVacina.findUnique({
       where: { nome }
     });
@@ -56,7 +56,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // 5. Cria no banco (Neon)
+    // Cria no banco (Neon)
     const novaVacina = await prisma.tipoVacina.create({
       data: {
         nome,

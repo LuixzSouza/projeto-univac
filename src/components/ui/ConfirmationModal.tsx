@@ -10,10 +10,10 @@ interface ConfirmationModalProps {
   onConfirm: () => void
   title: string
   message: string
-  isLoading?: boolean // ✨ Nova prop para travar o modal durante a ação
-  confirmText?: string // ✨ Texto customizável
+  isLoading?: boolean 
+  confirmText?: string 
   cancelText?: string
-  variant?: 'danger' | 'primary' // ✨ Pode ser usado para confirmações não destrutivas
+  variant?: 'danger' | 'primary' 
 }
 
 export function ConfirmationModal({
@@ -31,7 +31,6 @@ export function ConfirmationModal({
 
   return (
     <Modal isOpen={isOpen} onClose={isLoading ? () => {} : onClose} title="">
-      {/* Título customizado com Ícone */}
       <div className="flex flex-col items-center text-center sm:items-start sm:text-left">
         <div className={`mb-4 flex h-12 w-12 items-center justify-center rounded-full ${variant === 'danger' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'}`}>
           <AlertTriangle size={24} />

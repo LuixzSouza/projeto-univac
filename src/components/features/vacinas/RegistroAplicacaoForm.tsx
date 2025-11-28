@@ -6,8 +6,8 @@ import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { Loader2, Check, Syringe } from 'lucide-react'
 import { toast } from 'sonner'
-import { useSession } from 'next-auth/react' // <--- Importe
-import { logAction } from '@/lib/logger' // <--- Importe
+import { useSession } from 'next-auth/react' 
+import { logAction } from '@/lib/logger' 
 
 // Interfaces locais
 interface FuncionarioSimples { id: number; nome: string; status: boolean }
@@ -80,12 +80,11 @@ export function RegistroAplicacaoForm({ funcionarios, vacinas, onRegister, initi
                 })
             }
             
-            // ✅ AUDITORIA:
-            // 1. Achar os nomes para o log ficar legível
+            // Achar os nomes para o log ficar legível
             const nomeFunc = funcionarios.find(f => f.id === Number(formData.funcionarioId))?.nome || `ID ${formData.funcionarioId}`
             const nomeVac = vacinas.find(v => v.id === Number(formData.vacinaId))?.nome || `ID ${formData.vacinaId}`
 
-            // 2. Registrar ação
+            // Registrar ação
             await logAction(
                 "APLICACAO", 
                 "Vacina", 

@@ -27,7 +27,6 @@ export const authOptions: AuthOptions = {
         const isPasswordValid = await bcrypt.compare(credentials.senha, user.senha);
         if (!isPasswordValid) return null;
 
-        // Retornando tipo compatível com User
         return {
           id: user.id.toString(),
           email: user.email,
@@ -43,7 +42,7 @@ export const authOptions: AuthOptions = {
       if (user) {
         token.role = user.role;
         token.nome = user.nome;
-        token.id = user.id; // ✅ ADICIONE ESTA LINHA (Salva o ID no Token)
+        token.id = user.id; 
       }
       return token;
     },
@@ -51,7 +50,7 @@ export const authOptions: AuthOptions = {
       if (session.user) {
         (session.user as any).role = token.role;
         (session.user as any).nome = token.nome;
-        (session.user as any).id = token.id || token.sub; // ✅ ADICIONE ESTA LINHA (Passa do Token para a Sessão)
+        (session.user as any).id = token.id || token.sub; 
       }
       return session;
     },

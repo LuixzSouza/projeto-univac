@@ -1,1 +1,0 @@
-// # Funções utilitárias genéricas (formatação de data, etc.)

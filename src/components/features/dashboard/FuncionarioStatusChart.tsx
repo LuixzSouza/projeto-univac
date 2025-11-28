@@ -5,7 +5,6 @@ import { Pie } from 'react-chartjs-2'
 
 ChartJS.register(ArcElement, Tooltip, Legend)
 
-// Interface simplificada
 interface FuncionarioSimples {
   status: boolean
 }
@@ -25,8 +24,8 @@ export function FuncionarioStatusChart({ funcionarios }: FuncionarioStatusChartP
         label: 'Quantidade',
         data: [ativos, inativos],
         backgroundColor: [
-          '#10b981', // Verde
-          '#ef4444', // Vermelho    
+          '#10b981', 
+          '#ef4444',     
         ],
         borderColor: [
           'rgba(255,255,255,0.1)', 

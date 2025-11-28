@@ -88,20 +88,20 @@ function SearchBar({ userRole, userId }: { userRole: string, userId: string }) {
 
     const timer = setTimeout(async () => {
         try {
-            // 1. Busca Local (Páginas)
+            // Busca Local (Páginas)
             const localMatches = SYSTEM_PAGES.filter(p => 
                 p.title.toLowerCase().includes(query.toLowerCase()) &&
-                (p.role === 'ALL' || p.role === userRole) // Filtra páginas que o usuário não pode ver
+                (p.role === 'ALL' || p.role === userRole) 
             ).map(p => ({ ...p, type: 'page' }))
 
-            // 2. Busca API (Dados)
+            // Busca API (Dados)
             let apiMatches: any[] = []
             const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`)
             if (res.ok) {
                 apiMatches = await res.json()
             }
 
-            // 3. FILTRAGEM DE SEGURANÇA (IMPORTANTE!)
+            // FILTRAGEM DE SEGURANÇA (IMPORTANTE!)
             const safeApiMatches = apiMatches.filter(item => {
                 // Se for Vacina, todo mundo pode ver
                 if (item.type === 'vacina') return true;
@@ -123,7 +123,7 @@ function SearchBar({ userRole, userId }: { userRole: string, userId: string }) {
         } finally {
             setIsLoading(false)
         }
-    }, 600) // Delay de 600ms (Loading visual mais perceptível)
+    }, 600) 
 
     return () => clearTimeout(timer)
   }, [query, userRole, userId])
@@ -257,7 +257,6 @@ export function Navbar() {
         </div>
       </div>
 
-      {/* Passamos as permissões para a Barra de Busca */}
       <SearchBar userRole={userRole} userId={userId} />
 
       <div className="flex items-center gap-2 sm:gap-4">
@@ -294,7 +293,7 @@ export function Navbar() {
         </Button>
       </div>
 
-      {/* Menu Mobile Simplificado */}
+      {/* Menu Mobile */}
       {isMobileMenuOpen && (
         <div className="absolute left-0 top-16 z-50 w-full border-b border-border bg-bg-surface shadow-xl lg:hidden animate-in slide-in-from-top-5">
           <nav className="flex flex-col p-4 space-y-1">

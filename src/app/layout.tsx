@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/providers"; 
-// 1. Importe o Toaster do Sonner
 import { Toaster } from "sonner";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -23,7 +22,6 @@ export default function RootLayout({
         <Providers> 
           {children}
           
-          {/* 2. Adicione o componente aqui, dentro do Providers ou logo após o children */}
           <Toaster 
             richColors 
             position="top-right"

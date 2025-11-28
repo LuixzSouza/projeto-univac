@@ -12,7 +12,7 @@ export async function GET(request: Request) {
   try {
     // Busca paralela para ser rápido
     const [funcionarios, vacinas] = await Promise.all([
-      // 1. Procura em Funcionários (Nome, Email, CPF)
+      // Procura em Funcionários (Nome, Email, CPF)
       prisma.funcionarioUsuario.findMany({
         where: {
           OR: [
@@ -20,13 +20,13 @@ export async function GET(request: Request) {
             { email: { contains: query, mode: 'insensitive' } },
             { cpf: { contains: query } }
           ],
-          role: { not: 'ADMIN' } // Opcional: esconder admins
+          role: { not: 'ADMIN' } 
         },
         select: { id: true, nome: true, email: true },
         take: 3 // Limita resultados
       }),
 
-      // 2. Procura em Vacinas (Nome, Descrição)
+      // Procura em Vacinas (Nome, Descrição)
       prisma.tipoVacina.findMany({
         where: {
           OR: [

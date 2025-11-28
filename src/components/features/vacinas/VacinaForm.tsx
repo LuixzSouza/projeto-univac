@@ -4,9 +4,9 @@ import { useState, useEffect } from 'react'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
 import { Button } from '@/components/ui/Button'
-import { Loader2 } from 'lucide-react' // Adicionei o ícone de loading
+import { Loader2 } from 'lucide-react' 
 import { toast } from 'sonner'
-import { formatTitleCase } from '@/lib/formatters' // <--- Importação da formatação
+import { formatTitleCase } from '@/lib/formatters' 
 
 interface IVacina {
   id?: number

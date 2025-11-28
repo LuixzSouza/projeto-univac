@@ -18,7 +18,6 @@ import { Select } from '@/components/ui/Select'
 import { Input } from '@/components/ui/Input'
 
 // --- COMPONENTE DE TOOLTIP MELHORADO ---
-// Ajustei o z-index e a margem (mb-3) para ficar bem acima do cursor
 function HelpTip({ text }: { text: string }) {
     return (
         <div className="group relative inline-flex items-center ml-2 cursor-help z-10">

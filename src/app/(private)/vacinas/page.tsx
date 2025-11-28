@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import Link from 'next/link' // Import necessário para o Card de Detalhes
+import Link from 'next/link' 
 import { useSession } from 'next-auth/react' // Para RBAC
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
@@ -176,7 +176,7 @@ export default function VacinasPage() {
           return;
       }
 
-      // ✅ Auditoria
+      // Auditoria
       await logAction(
           "EXCLUSAO", 
           "Catálogo Vacina", 

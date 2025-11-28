@@ -18,7 +18,6 @@ export async function GET() {
         numeroRegistro: true,
         role: true,
         status: true,
-        // senha: false // Omissão explícita
       }
     });
 
@@ -45,7 +44,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { nome, email, cpf, numeroRegistro, senha, role, status } = body;
 
-    // 1. Validação Básica
+    // Validação Básica
     if (!nome || !email || !cpf || !senha || !numeroRegistro) {
       return NextResponse.json(
         { error: "Todos os campos obrigatórios devem ser preenchidos" },
@@ -53,7 +52,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // 2. Verificar duplicidade (Email, CPF ou Registro)
+    // Verificar duplicidade (Email, CPF ou Registro)
     const existe = await prisma.funcionarioUsuario.findFirst({
       where: {
         OR: [
@@ -71,10 +70,10 @@ export async function POST(request: Request) {
       );
     }
 
-    // 3. Criptografar a senha
+    // Criptografar a senha
     const hashedPassword = await bcrypt.hash(senha, 10);
 
-    // 4. Criar no Banco
+    // Criar no Banco
     const novoFuncionario = await prisma.funcionarioUsuario.create({
       data: {
         nome,
@@ -87,7 +86,6 @@ export async function POST(request: Request) {
       }
     });
 
-    // Remove a senha antes de devolver a resposta
     const { senha: _, ...funcionarioSemSenha } = novoFuncionario;
 
     return NextResponse.json(funcionarioSemSenha, { status: 201 });

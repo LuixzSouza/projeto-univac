@@ -9,10 +9,10 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('Iniciando o seeding...');
 
-  // 1. Criptografar a senha
+  // Criptografar a senha
   const senhaAdmin = await bcrypt.hash('admin123', 10);
 
-  // 2. Criar o usuário Admin
+  // usuário Admin
   const admin = await prisma.funcionarioUsuario.upsert({
     where: { email: 'admin@vacina.com' }, // Procura por esse email
     update: {}, // Se achar, não faz nada

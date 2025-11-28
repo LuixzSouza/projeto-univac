@@ -23,8 +23,6 @@ const SYSTEM_CHECKS = [
   { progress: 95, label: 'Finalizando inicialização...', icon: Syringe },
 ]
 
-// Aumentei um pouco o tempo total para dar tempo de ver as 4 fotos
-// 6000ms (6s) é um tempo bom para "show" sem irritar
 const TOTAL_DURATION = 6000 
 
 export default function LoadingPage() {
@@ -33,12 +31,12 @@ export default function LoadingPage() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [activeCheck, setActiveCheck] = useState(0)
 
-  // 1. Pré-carregamento
+  // Pré-carregamento
   useEffect(() => {
     router.prefetch('/login')
   }, [router])
 
-  // 2. Lógica de Progresso Linear
+  // Lógica de Progresso Linear
   useEffect(() => {
     const intervalTime = 20
     const steps = TOTAL_DURATION / intervalTime
@@ -57,7 +55,7 @@ export default function LoadingPage() {
     return () => clearInterval(timer)
   }, [])
 
-  // 3. Sincroniza os Checks
+  // Sincroniza os Checks
   useEffect(() => {
     const currentCheckIndex = SYSTEM_CHECKS.findIndex(check => progress < check.progress)
     if (currentCheckIndex === -1) {
@@ -67,7 +65,7 @@ export default function LoadingPage() {
     }
   }, [progress])
 
-  // 4. Troca de Imagens (Sincronizada)
+  // Troca de Imagens (Sincronizada)
   useEffect(() => {
     // Divide o tempo total pelo número de imagens para garantir que todas apareçam
     const imageInterval = TOTAL_DURATION / IMAGENS_FUNDO.length
@@ -92,14 +90,12 @@ export default function LoadingPage() {
   return (
     <div className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-black font-sans text-white">
       
-      {/* --- FUNDO ANIMADO --- */}
       <AnimatePresence mode='popLayout'>
         <motion.div
           key={currentImageIndex}
           initial={{ opacity: 0, scale: 1.1 }}
           animate={{ opacity: 0.4, scale: 1 }}
           exit={{ opacity: 0 }}
-          // Transição um pouco mais rápida para acompanhar a troca de fotos
           transition={{ duration: 1.2, ease: "easeOut" }}
           className="absolute inset-0 z-0"
         >
@@ -163,7 +159,6 @@ export default function LoadingPage() {
                 const isCompleted = index < activeCheck;
                 const isPending = index > activeCheck;
 
-                // Só mostra os que já passaram ou o atual para não poluir visualmente (efeito cascata)
                 if (index > activeCheck + 1) return null;
 
                 return (

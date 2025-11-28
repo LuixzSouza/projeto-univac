@@ -18,7 +18,6 @@ export function PaginationControls({
   itemsPerPage,
   totalItems
 }: PaginationControlsProps) {
-  // Se não tem itens ou só tem 1 página, esconde (opcional, mas limpa a tela)
   if (totalItems === 0) return null; 
 
   const handlePrevious = () => {
@@ -29,7 +28,6 @@ export function PaginationControls({
     if (currentPage < totalPages) onPageChange(currentPage + 1)
   }
 
-  // Lógica corrigida para exibição
   const firstItem = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
   const lastItem = Math.min(currentPage * itemsPerPage, totalItems);
 

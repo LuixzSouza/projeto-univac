@@ -5,7 +5,6 @@ import { Doughnut } from 'react-chartjs-2'
 
 ChartJS.register(ArcElement, Tooltip, Legend)
 
-// Interface local para desacoplar do mock
 interface VacinaSimples {
   id: number
   obrigatoriedade: boolean
@@ -16,11 +15,10 @@ interface StatusVacinaChartProps {
 }
 
 export function StatusVacinaChart({ vacinas }: StatusVacinaChartProps) {
-  // 1. Calcular os dados reais
+  // Calcular os dados reais
   const obrigatorias = vacinas.filter((v) => v.obrigatoriedade).length
   const naoObrigatorias = vacinas.length - obrigatorias
 
-  // 2. Definir a estrutura
   const data = {
     labels: ['Obrigatórias', 'Opcionais'],
     datasets: [
@@ -28,11 +26,10 @@ export function StatusVacinaChart({ vacinas }: StatusVacinaChartProps) {
         label: 'Quantidade',
         data: [obrigatorias, naoObrigatorias],
         backgroundColor: [
-          'rgba(234, 179, 8, 0.8)',   // Amarelo (Yellow-500)
-          'rgba(156, 163, 175, 0.5)', // Cinza (Gray-400)
+          'rgba(234, 179, 8, 0.8)',   
+          'rgba(156, 163, 175, 0.5)', 
         ],
         borderColor: [
-            // Usamos a cor do fundo do card para criar o efeito de separação
             'rgba(255, 255, 255, 0.1)', 
             'rgba(255, 255, 255, 0.1)', 
         ],
@@ -42,15 +39,15 @@ export function StatusVacinaChart({ vacinas }: StatusVacinaChartProps) {
     ],
   }
 
-  // 3. Opções do gráfico
+  // Opções do gráfico
   const options = {
     responsive: true,
-    maintainAspectRatio: false, // Importante para não estourar containers flex
+    maintainAspectRatio: false, 
     plugins: {
       legend: {
         position: 'bottom' as const,
         labels: {
-            color: '#9ca3af', // Cor do texto da legenda (text-muted)
+            color: '#9ca3af', 
             usePointStyle: true,
             padding: 20,
         }
